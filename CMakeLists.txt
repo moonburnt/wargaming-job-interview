@@ -32,9 +32,19 @@ target_include_directories(editor PRIVATE
 )
 
 # Setup raylib
-add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/raylib")
-target_link_libraries(editor raylib)
-target_include_directories(editor PUBLIC ${raylib_INCLUDE_DIRS})
+# add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/raylib")
+# target_link_libraries(editor raylib)
+# target_include_directories(editor PUBLIC ${raylib_INCLUDE_DIRS})
+
+# Setup imgui
+# add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/imgui")
+# target_link_libraries(editor imgui)
+# target_include_directories(editor PUBLIC ${imgui_INCLUDE_DIRS})
+
+# Setup rlimgui
+add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/rlimgui")
+target_link_libraries(editor rlimgui)
+target_include_directories(editor PUBLIC ${rlimgui_INCLUDE_DIRS})
 
 # Setup nlohmann_json
 add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/nlohmann_json")
