@@ -1,0 +1,6 @@
+TODO.txt
+build/
+compile_commands.json
+.cache
+settings.toml
+Assets
