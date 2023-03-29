@@ -5,7 +5,22 @@
 #include <fstream>
 #include <optional>
 #include <filesystem>
+#include <exception>
 
+
+class ValidationError : public std::exception {
+protected:
+    const std::string err;
+
+public:
+    ValidationError(const std::string& d): err(
+        fmt::format("Validation error: {}", d)
+    ) {}
+
+    const char* what() const throw() override {
+        return err.c_str();
+    }
+};
 
 template <typename T> class Validator {
 public:
@@ -15,15 +30,17 @@ public:
 
 class FilePathValidator: public Validator<std::string> {
     void validate(std::string path) override {
-        spdlog::info("Performing validation of {}", path);
-        // TODO: throw on err
+        spdlog::debug("Performing validation of {}", path);
         std::filesystem::path fp = path;
         if (std::filesystem::exists(fp)) {
-            spdlog::info("Success");
+            spdlog::debug("Success");
             return;
         }
         else {
-            spdlog::info("Fail");
+            spdlog::debug("Fail");
+            throw ValidationError(
+                fmt::format("Path {} does not lead to a file", path)
+            );
         }
     }
 };
@@ -43,14 +60,16 @@ public:
     }
 
     void validate(float val) override {
-        spdlog::info("Performing validation of {}", val);
-        // TODO: throw on err
+        spdlog::debug("Performing validation of {}", val);
         if (min < val < max) {
-            spdlog::info("Success");
+            spdlog::debug("Success");
             return;
         }
         else {
-            spdlog::info("Fail");
+            spdlog::debug("Fail");
+            throw ValidationError(
+                fmt::format("{} is not in between {} and {}", val, min, max)
+            );
         }
     }
 };
@@ -66,16 +85,18 @@ public:
     }
 
     void validate(std::string str) override {
-        // TODO: throw on err
-        spdlog::info("Performing validation of {}", str);
+        spdlog::debug("Performing validation of {}", str);
         for(std::string& ch: choices) {
             if(!str.compare(ch)) {
-                spdlog::info("Success");
+                spdlog::debug("Success");
                 return;
             }
         }
 
-        spdlog::info("Fail");
+        spdlog::debug("Fail");
+        throw ValidationError(
+            fmt::format("{} is not one of the valid choices", str)
+        );
     }
 };
 
@@ -83,13 +104,16 @@ public:
 class IntegerPositiveValidator: public Validator<int> {
 public:
     void validate(int i) override {
-        spdlog::info("Performing validation of {}", i);
+        spdlog::debug("Performing validation of {}", i);
         if (i >= 0) {
-            spdlog::info("Success");
+            spdlog::debug("Success");
             return;
         }
         else {
-            spdlog::info("Fail");
+            spdlog::debug("Fail");
+            throw ValidationError(
+                fmt::format("{} is not a positive integer", i)
+            );
         }
     }
 };
@@ -316,51 +340,53 @@ public:
             for (nlohmann::json::iterator it = data.begin(); it != data.end(); it++) {
                 EditorObject obj = EditorObject(it.key());
                 auto props = it.value();
-                // std::cout << obj.get_name() << ":" << props << "\n";
 
-                for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
-                    std::string key = pit.key();
+                // TODO: maybe don't ignore the whole object, but point at
+                // specific prop's issues?
 
-                    if (!key.compare("icon")) {
-                        Icon* i = new Icon(pit.value());
-                        i->serialize();
-                        obj.add_icon(i);
-                        // std::cout << props[key] << ":a" << pit.value() << "\n";
+                try {
+                    for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
+                        std::string key = pit.key();
 
-                        // std::count << obj.st
+                        if (!key.compare("icon")) {
+                            Icon* i = new Icon(pit.value());
+                            i->serialize();
+                            obj.add_icon(i);
+                        }
+                        else if (!key.compare("speed")) {
+                            Speed* sp = new Speed(
+                                pit.value()["value"],
+                                pit.value()["min"],
+                                pit.value()["max"]
+                            );
+                            sp->serialize();
+                            obj.add_speed(sp);
+                        }
+                        else if (!key.compare("material")) {
+                            Material* mat = new Material(
+                                pit.value()["value"],
+                                pit.value()["choices"]
+                            );
+                            mat->serialize();
+                            obj.add_material(mat);
+                        }
+                        else if (!key.compare("points")) {
+                            Points* pts = new Points(
+                                pit.value()
+                            );
+                            pts->serialize();
+                            obj.add_points(pts);
+                        }
+                        else {
+                            spdlog::warn(
+                                "Unable to find parse rules for key {}", pit.key()
+                            );
+                        }
                     }
-                    else if (!key.compare("speed")) {
-                        // TODO: try/catch
-                        Speed* sp = new Speed(
-                            pit.value()["value"],
-                            pit.value()["min"],
-                            pit.value()["max"]
-                        );
-                        sp->serialize();
-                        obj.add_speed(sp);
-                        // std::cout << props[key] << ":a" << pit.value() << "\n";
-                        // std::count << obj.st
-                    }
-                    else if (!key.compare("material")) {
-                        Material* mat = new Material(
-                            pit.value()["value"],
-                            pit.value()["choices"]
-                        );
-                        mat->serialize();
-                        obj.add_material(mat);
-                    }
-                    else if (!key.compare("points")) {
-                        Points* pts = new Points(
-                            pit.value()
-                        );
-                        pts->serialize();
-                        obj.add_points(pts);
-                    }
-                    else {
-                        spdlog::warn(
-                            "Unable to find parse rules for key {}", pit.key()
-                        );
-                    }
+                }
+                catch (ValidationError& v_err) {
+                    spdlog::warn(v_err.what());
+                    continue;
                 }
                 spdlog::info("Parsed object: {}", obj.to_string());
             }
@@ -378,8 +404,7 @@ public:
 
 
 int main(int argc, char* const* argv) {
-    // Processing launch arguments.
-    // For now there is just one - to toggle on debug messages.
+    spdlog::set_pattern("[%H:%M:%S][%l]%$ %v");
 
     std::string path = "";
 
@@ -401,6 +426,8 @@ int main(int argc, char* const* argv) {
     spdlog::info("Attempting to load json on path {}", path);
     JsonParser jp = JsonParser(path);
     jp.parse();
+
+    spdlog::info("Done");
 
     return 0;
 }
