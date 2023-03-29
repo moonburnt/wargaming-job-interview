@@ -1,11 +1,11 @@
 #include "nlohmann/json.hpp"
-#include <stdio.h>
+#include "spdlog/spdlog.h"
+#include "spdlog/fmt/fmt.h"
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <optional>
 #include <filesystem>
-#include <any>
+
 
 template <typename T> class Validator {
 public:
@@ -15,10 +15,15 @@ public:
 
 class FilePathValidator: public Validator<std::string> {
     void validate(std::string path) override {
+        spdlog::info("Performing validation of {}", path);
         // TODO: throw on err
         std::filesystem::path fp = path;
         if (std::filesystem::exists(fp)) {
-            std::cout << "yes";
+            spdlog::info("Success");
+            return;
+        }
+        else {
+            spdlog::info("Fail");
         }
     }
 };
@@ -38,9 +43,14 @@ public:
     }
 
     void validate(float val) override {
+        spdlog::info("Performing validation of {}", val);
         // TODO: throw on err
         if (min < val < max) {
-            std::cout << "yes";
+            spdlog::info("Success");
+            return;
+        }
+        else {
+            spdlog::info("Fail");
         }
     }
 };
@@ -57,12 +67,15 @@ public:
 
     void validate(std::string str) override {
         // TODO: throw on err
+        spdlog::info("Performing validation of {}", str);
         for(std::string& ch: choices) {
             if(!str.compare(ch)) {
-                std::cout << "yes";
+                spdlog::info("Success");
                 return;
             }
         }
+
+        spdlog::info("Fail");
     }
 };
 
@@ -70,8 +83,13 @@ public:
 class IntegerPositiveValidator: public Validator<int> {
 public:
     void validate(int i) override {
+        spdlog::info("Performing validation of {}", i);
         if (i >= 0) {
-            std::cout << "yes";
+            spdlog::info("Success");
+            return;
+        }
+        else {
+            spdlog::info("Fail");
         }
     }
 };
@@ -92,9 +110,6 @@ protected:
     std::vector<Validator<TIn>*> validators = {};
 
 public:
-
-
-    // ObjectProperty(const std::string &n) : name(n) {};
     ObjectProperty(TIn i) : data(i) {}
 
     std::string get_name() {
@@ -137,7 +152,7 @@ public:
     }
 
     virtual std::string to_string() {
-        return get_name();
+        return fmt::format("{} ({})", get_name(), get_data());
     }
 
     TIn get_data() {
@@ -158,10 +173,6 @@ public:
     void perform_serialization() override {
         validated_data = data;
     }
-
-    std::string to_string() override {
-        return get_name() + "(" + get_data() + ")";
-    }
 };
 
 
@@ -180,10 +191,6 @@ public:
     void perform_serialization() override {
         validated_data = data;
     }
-
-    std::string to_string() override {
-        return get_name() + "(" + std::to_string(get_data()) + ")";
-    }
 };
 
 
@@ -201,10 +208,6 @@ public:
     void perform_serialization() override {
         validated_data = data;
     }
-
-    std::string to_string() override {
-        return get_name() + "(" + get_data() + ")";
-    }
 };
 
 
@@ -219,10 +222,6 @@ public:
     // Temporary
     void perform_serialization() override {
         validated_data = data;
-    }
-
-    std::string to_string() override {
-        return get_name() + "(" + std::to_string(get_data()) + ")";
     }
 };
 
@@ -297,7 +296,7 @@ public:
         file.open(path);
         // TODO: more detailed error handling
         if (!file.good()) {
-            std::printf("Unable to open %s\n", path.c_str());
+            spdlog::error("Unable to open {}", path);
             return false;
         }
 
@@ -308,7 +307,7 @@ public:
             file >> data;
         }
         catch (const nlohmann::detail::parse_error& err) {
-            std::printf("%s\n", err.what());
+            spdlog::error(err.what());
 
             return false;
         }
@@ -358,33 +357,19 @@ public:
                         obj.add_points(pts);
                     }
                     else {
-                        std::cout << "Unable to find parse rules for key" << pit.key() << "\n";
+                        spdlog::warn(
+                            "Unable to find parse rules for key {}", pit.key()
+                        );
                     }
                 }
-                std::cout << "Parsed object: " << obj.to_string() << "\n";
+                spdlog::info("Parsed object: {}", obj.to_string());
             }
         }
         catch (const nlohmann::detail::type_error& err) {
-            std::printf("%s\n", err.what());
+            spdlog::warn(err.what());
 
             return false;
         }
-
-        // try {
-        //     save_data = {
-        //         data["player_stats"],
-        //         data["dungeon_stats"],
-        //         data["map_settings"],
-        //         data["map_layout"]
-        //     };
-        // }
-        // catch (const nlohmann::detail::type_error& err) {
-        //     spdlog::warn(err.what());
-
-        //     return false;
-        // }
-
-        // savefile = save_data;
 
         return true;
     }
@@ -400,7 +385,7 @@ int main(int argc, char* const* argv) {
 
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
-            if (std::strcmp(argv[i], "--json") == 0) {
+            if (!std::string(argv[i]).compare("--json")) {
                 if (i+1 < argc) {
                     path = argv[i+1];
                     break;
@@ -408,12 +393,12 @@ int main(int argc, char* const* argv) {
             }
         }
     }
-    if (std::strcmp(path.c_str(), "") == 0) {
-        std::printf("Expected a path after '--json'\n");
+    if (!path.compare("")) {
+        spdlog::error("Expected a path after '--json'");
         return 1;
     }
 
-    std::printf("Attempting to load json on path %s\n", path.c_str());
+    spdlog::info("Attempting to load json on path {}", path);
     JsonParser jp = JsonParser(path);
     jp.parse();
 

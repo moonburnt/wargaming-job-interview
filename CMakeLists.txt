@@ -31,15 +31,10 @@ target_include_directories(editor PRIVATE
     "${CMAKE_SOURCE_DIR}/src"
 )
 
-# Setup raylib
-# add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/raylib")
-# target_link_libraries(editor raylib)
-# target_include_directories(editor PUBLIC ${raylib_INCLUDE_DIRS})
-
-# Setup imgui
-# add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/imgui")
-# target_link_libraries(editor imgui)
-# target_include_directories(editor PUBLIC ${imgui_INCLUDE_DIRS})
+# Setup spdlog
+add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/spdlog")
+target_link_libraries(editor spdlog)
+target_include_directories(editor PUBLIC ${spdlog_INCLUDE_DIRS})
 
 # Setup rlimgui
 add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/rlimgui")
