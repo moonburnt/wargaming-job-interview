@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(imgui STATIC
     imconfig.h
+    imgui_demo.cpp
     imgui_draw.cpp
     imgui_internal.h
     imgui_tables.cpp
@@ -24,6 +25,6 @@ add_library(imgui STATIC
 )
 
 target_include_directories(imgui PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-    "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
 )

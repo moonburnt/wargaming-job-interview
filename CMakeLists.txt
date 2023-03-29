@@ -36,10 +36,17 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/spdlog")
 target_link_libraries(editor spdlog)
 target_include_directories(editor PUBLIC ${spdlog_INCLUDE_DIRS})
 
+# Setup raylib
+add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/raylib")
+target_link_libraries(editor raylib)
+
+#setup imgui
+add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/imgui")
+target_link_libraries(editor imgui)
+
 # Setup rlimgui
 add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/rlimgui")
 target_link_libraries(editor rlimgui)
-target_include_directories(editor PUBLIC ${rlimgui_INCLUDE_DIRS})
 
 # Setup nlohmann_json
 add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/nlohmann_json")

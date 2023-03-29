@@ -17,16 +17,12 @@ add_library(rlimgui STATIC
 )
 
 target_include_directories(rlimgui PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-    "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
 )
 
 # Setup raylib
-add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/raylib" "${CMAKE_SOURCE_DIR}/build/rlimgui")
 target_link_libraries(rlimgui raylib)
-target_include_directories(rlimgui PUBLIC ${raylib_INCLUDE_DIRS})
 
 # Setup imgui
-add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/imgui" "${CMAKE_SOURCE_DIR}/build/imgui")
 target_link_libraries(rlimgui imgui)
-target_include_directories(rlimgui PUBLIC ${imgui_INCLUDE_DIRS})
