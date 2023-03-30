@@ -303,15 +303,15 @@ public:
     }
 };
 
+
 class JsonParser {
 private:
     std::string path;
-    std::unordered_map<std::string, EditorObject> objects = {};
 
 public:
     JsonParser(const std::string& p) : path(p) {}
 
-    bool parse() {
+    bool parse(std::unordered_map<std::string, EditorObject>& objects) {
         std::ifstream file;
         nlohmann::json data;
 
@@ -423,12 +423,28 @@ public:
 
         return true;
     }
-
-    const std::unordered_map<std::string, EditorObject>& get_parsed_objects() {
-        return objects;
-    }
 };
 
+
+class ObjectStorage {
+protected:
+    std::unordered_map<std::string, EditorObject> objects = {};
+
+public:
+    void populate_from_json(const std::string& p) {
+        JsonParser jp = JsonParser(p);
+        jp.parse(objects);
+    }
+
+    int size() {
+        return objects.size();
+    }
+
+    // Will throw if object does not exist
+    const EditorObject& get_object(const std::string& name) {
+        return objects.at(name);
+    }
+};
 
 
 int main(int argc, char* const* argv) {
@@ -452,12 +468,11 @@ int main(int argc, char* const* argv) {
     }
 
     spdlog::info("Attempting to load json on path {}", path);
-    JsonParser jp = JsonParser(path);
-    jp.parse();
 
-    auto i = jp.get_parsed_objects();
+    ObjectStorage storage;
+    storage.populate_from_json(path);
 
-    spdlog::info("Done. Successfully fetched {} objects", i.size());
+    spdlog::info("Done. Successfully fetched {} objects", storage.size());
 
     return 0;
 }
