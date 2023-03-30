@@ -444,6 +444,23 @@ public:
     const EditorObject& get_object(const std::string& name) {
         return objects.at(name);
     }
+
+    bool add_object(const std::string& name, EditorObject obj) {
+        if (objects.find(name) != objects.end()) {
+            spdlog::warn(
+                "Unable to add object with name '{}': already exists",  name
+            );
+            return false;
+        }
+        else {
+            objects.insert(std::make_pair(name, obj));
+            return true;
+        }
+    }
+
+    bool add_object(const std::string& name) {
+        return add_object(name, EditorObject(name));
+    }
 };
 
 
@@ -473,6 +490,9 @@ int main(int argc, char* const* argv) {
     storage.populate_from_json(path);
 
     spdlog::info("Done. Successfully fetched {} objects", storage.size());
+
+    storage.add_object("asda");
+    storage.add_object("banana");
 
     return 0;
 }
