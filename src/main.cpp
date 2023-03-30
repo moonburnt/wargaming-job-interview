@@ -120,21 +120,26 @@ public:
 };
 
 
-template <typename TIn, typename TOut> class ObjectProperty {
+template <typename T> class ObjectProperty {
 protected:
     std::string name = "";
     bool is_validated = false;
-    TIn data;
-    std::optional<TOut> validated_data;
+    T data;
+    std::optional<T> validated_data;
 
     void set_name(const std::string& n) {
         name = n;
     }
 
-    std::vector<Validator<TIn>*> validators = {};
+    std::vector<Validator<T>*> validators = {};
 
 public:
-    ObjectProperty(TIn i) : data(i) {}
+    ObjectProperty(T i) : data(i) {}
+
+    void set_value(T val) {
+        data = val;
+        is_validated = false;
+    }
 
     std::string get_name() {
         return name;
@@ -144,7 +149,7 @@ public:
     virtual ~ObjectProperty() = default;
 
 
-    void add_validator(Validator<TIn>* f) {
+    void add_validator(Validator<T>* f) {
         validators.push_back(f);
     }
 
@@ -155,16 +160,13 @@ public:
         is_validated = true;
     }
 
-    virtual void perform_serialization() = 0;
-
-    // Validate data and serialize it into data field
-    std::optional<TOut> serialize() {
+    // Validate data
+    std::optional<T> validate() {
         perform_validation();
-        perform_serialization();
         return validated_data;
     }
 
-    std::optional<TOut> get_validated_data() {
+    std::optional<T> get_validated_data() {
         if (!is_validated) {
             throw ValidationError(
                 "Unable to get validated data from non-validated source. "
@@ -180,28 +182,24 @@ public:
         return fmt::format("{} ({})", get_name(), get_data());
     }
 
-    TIn get_data() {
+    T get_data() {
         return data;
     }
 };
 
-// Temporary. TODO: serialize into in-memory image
-class Icon : public ObjectProperty<std::string, std::string> {
+
+// TODO: also store image
+class Icon : public ObjectProperty<std::string> {
 public:
     Icon(std::string p) : ObjectProperty(p) {
         set_name("icon");
 
         add_validator(new FilePathValidator());
     }
-
-    // Temporary
-    void perform_serialization() override {
-        validated_data = data;
-    }
 };
 
 
-class Speed : public ObjectProperty<float, float> {
+class Speed : public ObjectProperty<float> {
 public:
     Speed(float val, float min, float max) : ObjectProperty(val) {
         set_name("speed");
@@ -211,15 +209,10 @@ public:
         v->set_max(max);
         add_validator(v);
     }
-
-    // Temporary
-    void perform_serialization() override {
-        validated_data = data;
-    }
 };
 
 
-class Material : public ObjectProperty<std::string, std::string> {
+class Material : public ObjectProperty<std::string> {
 public:
     Material(std::string val, std::vector<std::string> choices) : ObjectProperty(val) {
         set_name("material");
@@ -228,25 +221,15 @@ public:
         v->set_choices(choices);
         add_validator(v);
     }
-
-    // Temporary
-    void perform_serialization() override {
-        validated_data = data;
-    }
 };
 
 
-class Points: public ObjectProperty<int, int> {
+class Points: public ObjectProperty<int> {
 public:
     Points(int val) : ObjectProperty(val) {
         set_name("points");
 
         add_validator(new IntegerPositiveValidator());
-    }
-
-    // Temporary
-    void perform_serialization() override {
-        validated_data = data;
     }
 };
 
@@ -352,7 +335,7 @@ public:
                         Icon* i;
                         try {
                             i = new Icon(pit.value());
-                            i->serialize();
+                            i->validate();
                         }
                         catch (ValidationError& v_err) {
                             spdlog::warn(v_err.what());
@@ -368,7 +351,7 @@ public:
                                 pit.value()["min"],
                                 pit.value()["max"]
                             );
-                            sp->serialize();
+                            sp->validate();
                         }
                         catch (ValidationError& v_err) {
                             spdlog::warn(v_err.what());
@@ -383,7 +366,7 @@ public:
                                 pit.value()["value"],
                                 pit.value()["choices"]
                             );
-                            mat->serialize();
+                            mat->validate();
                         }
                         catch (ValidationError& v_err) {
                             spdlog::warn(v_err.what());
@@ -397,7 +380,7 @@ public:
                             pts = new Points(
                                 pit.value()
                             );
-                            pts->serialize();
+                            pts->validate();
                         }
                         catch (ValidationError& v_err) {
                             spdlog::warn(v_err.what());
