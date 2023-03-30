@@ -6,6 +6,7 @@
 #include <optional>
 #include <filesystem>
 #include <exception>
+#include <unordered_map>
 
 
 class ValidationError : public std::exception {
@@ -262,9 +263,6 @@ protected:
 public:
     EditorObject(const std::string& n) : name(n) {}
 
-    // void add_prop(ObjectProperty<std::any, std::any>* prop) {
-    //     props.push_back(prop);
-    // }
     void add_icon(Icon* i) {
         icon = i;
     }
@@ -287,9 +285,6 @@ public:
 
     std::string to_string() {
         std::string ret = "EditorObject '" + get_name() + "': (";
-        // for (auto i: props) {
-        //     ret += i.get_name() + ", ";
-        // }
         if (icon != nullptr) {
             ret += icon->to_string() + ", ";
         }
@@ -311,21 +306,21 @@ public:
 class JsonParser {
 private:
     std::string path;
+    std::unordered_map<std::string, EditorObject> objects = {};
 
 public:
     JsonParser(const std::string& p) : path(p) {}
 
     bool parse() {
         std::ifstream file;
+        nlohmann::json data;
+
         file.open(path);
         // TODO: more detailed error handling
         if (!file.good()) {
             spdlog::error("Unable to open {}", path);
             return false;
         }
-
-        nlohmann::json data;
-        // SavefileFields save_data;
 
         try {
             file >> data;
@@ -338,13 +333,18 @@ public:
 
         try {
             for (nlohmann::json::iterator it = data.begin(); it != data.end(); it++) {
-                EditorObject obj = EditorObject(it.key());
+                std::string obj_name = it.key();
+                if (objects.find(obj_name) != objects.end()) {
+                    spdlog::warn(
+                        "Already parsed object with name {}, skipping",
+                        obj_name
+                    );
+                }
+                EditorObject obj = EditorObject(obj_name);
                 auto props = it.value();
 
                 // TODO: maybe add different error handling options - skip,
                 // replace with default, etc
-
-
                 for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
                     std::string key = pit.key();
 
@@ -412,6 +412,7 @@ public:
                     }
                 }
                 spdlog::info("Parsed object: {}", obj.to_string());
+                objects.insert(std::make_pair(obj_name, obj));
             }
         }
         catch (const nlohmann::detail::type_error& err) {
@@ -421,6 +422,10 @@ public:
         }
 
         return true;
+    }
+
+    const std::unordered_map<std::string, EditorObject>& get_parsed_objects() {
+        return objects;
     }
 };
 
@@ -450,7 +455,9 @@ int main(int argc, char* const* argv) {
     JsonParser jp = JsonParser(path);
     jp.parse();
 
-    spdlog::info("Done");
+    auto i = jp.get_parsed_objects();
+
+    spdlog::info("Done. Successfully fetched {} objects", i.size());
 
     return 0;
 }
