@@ -341,52 +341,75 @@ public:
                 EditorObject obj = EditorObject(it.key());
                 auto props = it.value();
 
-                // TODO: maybe don't ignore the whole object, but point at
-                // specific prop's issues?
+                // TODO: maybe add different error handling options - skip,
+                // replace with default, etc
 
-                try {
-                    for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
-                        std::string key = pit.key();
 
-                        if (!key.compare("icon")) {
-                            Icon* i = new Icon(pit.value());
+                for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
+                    std::string key = pit.key();
+
+                    if (!key.compare("icon")) {
+                        Icon* i;
+                        try {
+                            i = new Icon(pit.value());
                             i->serialize();
-                            obj.add_icon(i);
                         }
-                        else if (!key.compare("speed")) {
-                            Speed* sp = new Speed(
+                        catch (ValidationError& v_err) {
+                            spdlog::warn(v_err.what());
+                            continue;
+                        }
+                        obj.add_icon(i);
+                    }
+                    else if (!key.compare("speed")) {
+                        Speed* sp;
+                        try {
+                            sp = new Speed(
                                 pit.value()["value"],
                                 pit.value()["min"],
                                 pit.value()["max"]
                             );
                             sp->serialize();
-                            obj.add_speed(sp);
                         }
-                        else if (!key.compare("material")) {
-                            Material* mat = new Material(
+                        catch (ValidationError& v_err) {
+                            spdlog::warn(v_err.what());
+                            continue;
+                        }
+                        obj.add_speed(sp);
+                    }
+                    else if (!key.compare("material")) {
+                        Material* mat;
+                        try {
+                            mat = new Material(
                                 pit.value()["value"],
                                 pit.value()["choices"]
                             );
                             mat->serialize();
-                            obj.add_material(mat);
                         }
-                        else if (!key.compare("points")) {
-                            Points* pts = new Points(
+                        catch (ValidationError& v_err) {
+                            spdlog::warn(v_err.what());
+                            continue;
+                        }
+                        obj.add_material(mat);
+                    }
+                    else if (!key.compare("points")) {
+                        Points* pts;
+                        try {
+                            pts = new Points(
                                 pit.value()
                             );
                             pts->serialize();
-                            obj.add_points(pts);
                         }
-                        else {
-                            spdlog::warn(
-                                "Unable to find parse rules for key {}", pit.key()
-                            );
+                        catch (ValidationError& v_err) {
+                            spdlog::warn(v_err.what());
+                            continue;
                         }
+                        obj.add_points(pts);
                     }
-                }
-                catch (ValidationError& v_err) {
-                    spdlog::warn(v_err.what());
-                    continue;
+                    else {
+                        spdlog::warn(
+                            "Unable to find parse rules for key {}", pit.key()
+                        );
+                    }
                 }
                 spdlog::info("Parsed object: {}", obj.to_string());
             }
