@@ -15,7 +15,7 @@ protected:
     std::string name = "";
     bool is_validated = false;
     T data;
-    std::optional<T> validated_data;
+    std::optional<T> validated_data = std::nullopt;
 
     void set_name(const std::string& n) {
         name = n;
@@ -48,6 +48,7 @@ public:
             i->validate(data);
         }
         is_validated = true;
+        validated_data = data;
     }
 
     // Validate data
@@ -56,7 +57,7 @@ public:
         return validated_data;
     }
 
-    std::optional<T> get_validated_data() {
+    T get_validated_data() {
         if (!is_validated) {
             throw ValidationError(
                 "Unable to get validated data from non-validated source. "
@@ -64,12 +65,16 @@ public:
             );
         }
         else {
-            return validated_data;
+            return validated_data.value();
         }
     }
 
     virtual std::string to_string() {
         return fmt::format("{} ({})", get_name(), get_data());
+    }
+
+    virtual nlohmann::json to_json() {
+        return get_validated_data();
     }
 
     T get_data() {
@@ -173,6 +178,40 @@ public:
 
         ret += ")";
         return ret;
+    }
+
+    nlohmann::json to_json() {
+        nlohmann::json data;
+        if (icon != nullptr) {
+            data["icon"] = icon->to_json();
+        }
+        if (speed != nullptr) {
+            data["speed"] = speed->to_json();
+        }
+        if (material != nullptr) {
+            data["material"] = material->to_json();
+        }
+        if (points != nullptr) {
+            data["points"] = points->to_json();
+        }
+
+        return data;
+    }
+
+    Icon* get_icon() {
+        return icon;
+    }
+
+    Speed* get_speed() {
+        return speed;
+    }
+
+    Material* get_material() {
+        return material;
+    }
+
+    Points* get_points() {
+        return points;
     }
 };
 
@@ -335,7 +374,35 @@ public:
         return add_object(name, EditorObject(name));
     }
 
-    // bool to_json(const std::string &p) {
-    //     nlohmann::json data;
-    // }
+    nlohmann::json to_json() {
+        nlohmann::json data;
+
+        for (auto& [k, v]: objects) {
+            data[k] = v.to_json();
+        }
+
+        return data;
+    }
+
+    bool to_json_file(const std::string& path) {
+        nlohmann::json data = to_json();
+
+        std::ofstream file;
+
+        file.open(path);
+        if (!file.good()) {
+            spdlog::error("Unable to open {}", path);
+            return false;
+        }
+
+        try {
+            file << data;
+        }
+        catch (const nlohmann::detail::parse_error& err) {
+            spdlog::error(err.what());
+            return false;
+        }
+
+        return true;
+    }
 };

@@ -31,8 +31,7 @@ int main(int argc, char* const* argv) {
 
     spdlog::info("Done. Successfully fetched {} objects", storage.size());
 
-    storage.add_object("asda");
-    storage.add_object("banana");
+    storage.to_json_file("./out.json");
 
     return 0;
 }
