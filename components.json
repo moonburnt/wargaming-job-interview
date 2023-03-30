@@ -1,0 +1,40 @@
+{
+    "player": {
+        "icon": "./player.png"
+    },
+    "wall": {
+        "icon": "./wall.png",
+        "material": {
+            "choices": [
+                "Steel",
+                "Stone",
+                "Wood"
+            ],
+            "value": "Stone"
+        }
+    },
+    "ladder": {
+        "icon": "./ladder.png",
+        "speed": {
+            "min": 1.0,
+            "max": 3.0,
+            "value": 1.1
+        }
+    },
+    "rail": {
+        "icon": "./rail.png",
+        "speed": {
+            "min": 1.0,
+            "max": 10.0,
+            "value": 1.5
+        }
+    },
+    "gold": {
+        "icon": "./gold.png",
+        "points": 1
+    },
+    "banana": {
+        "icon": "./banana.png",
+        "points": 2
+    }
+}

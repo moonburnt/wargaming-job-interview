@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(imgui STATIC
+    misc/cpp/imgui_stdlib.cpp
+    misc/cpp/imgui_stdlib.h
     imconfig.h
     imgui_demo.cpp
     imgui_draw.cpp

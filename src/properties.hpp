@@ -78,50 +78,33 @@ public:
     T get_data() {
         return data;
     }
+
+    virtual void draw() {
+        spdlog::info("Drawing property {}", get_name());
+    }
 };
 
 
 // TODO: also store image
 class IconProperty : public ObjectProperty<std::string> {
 public:
-    IconProperty(std::string p) : ObjectProperty(p) {
-        set_name("icon");
-
-        add_validator(new FilePathValidator());
-    }
+    IconProperty(std::string p);
 };
 
 
 class SpeedProperty : public ObjectProperty<float> {
 public:
-    SpeedProperty(float val, float min, float max) : ObjectProperty(val) {
-        set_name("speed");
-
-        FloatInRangeValidator* v = new FloatInRangeValidator();
-        v->set_min(min);
-        v->set_max(max);
-        add_validator(v);
-    }
+    SpeedProperty(float val, float min, float max);
 };
 
 
 class MaterialProperty : public ObjectProperty<std::string> {
 public:
-    MaterialProperty(std::string val, std::vector<std::string> choices) : ObjectProperty(val) {
-        set_name("material");
-
-        TextChoicesValidator* v = new TextChoicesValidator();
-        v->set_choices(choices);
-        add_validator(v);
-    }
+    MaterialProperty(std::string val, std::vector<std::string> choices);
 };
 
 
 class PointsProperty: public ObjectProperty<int> {
 public:
-    PointsProperty(int val) : ObjectProperty(val) {
-        set_name("points");
-
-        add_validator(new IntegerPositiveValidator());
-    }
+    PointsProperty(int val);
 };

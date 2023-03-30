@@ -5,7 +5,7 @@
 #include "spdlog/fmt/fmt.h"
 #include "properties.hpp"
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <fstream>
 
 class EditorObject {
@@ -18,259 +18,55 @@ protected:
     PointsProperty* points = nullptr;
 
 public:
-    EditorObject(const std::string& n) : name(n) {}
+    EditorObject(const std::string& n);
 
-    void add_icon(IconProperty* i) {
-        icon = i;
-    }
+    void add_icon(IconProperty* i);
 
-    void add_speed(SpeedProperty* sp) {
-        speed = sp;
-    }
+    void add_speed(SpeedProperty* sp);
 
-    void add_material(MaterialProperty* mat) {
-        material = mat;
-    }
+    void add_material(MaterialProperty* mat);
 
-    void add_points(PointsProperty* pts) {
-        points = pts;
-    }
+    void add_points(PointsProperty* pts);
 
-    std::string get_name() {
-        return name;
-    }
+    std::string get_name();
 
-    std::string to_string() {
-        std::string ret = "EditorObject '" + get_name() + "': (";
-        if (icon != nullptr) {
-            ret += icon->to_string() + ", ";
-        }
-        if (speed != nullptr) {
-            ret += speed->to_string() + ", ";
-        }
-        if (material != nullptr) {
-            ret += material->to_string() + ", ";
-        }
-        if (points != nullptr) {
-            ret += points->to_string() + ", ";
-        }
+    std::string to_string();
 
-        ret += ")";
-        return ret;
-    }
+    nlohmann::json to_json();
 
-    nlohmann::json to_json() {
-        nlohmann::json data;
-        if (icon != nullptr) {
-            data["icon"] = icon->to_json();
-        }
-        if (speed != nullptr) {
-            data["speed"] = speed->to_json();
-        }
-        if (material != nullptr) {
-            data["material"] = material->to_json();
-        }
-        if (points != nullptr) {
-            data["points"] = points->to_json();
-        }
+    IconProperty* get_icon();
 
-        return data;
-    }
+    SpeedProperty* get_speed();
 
-    IconProperty* get_icon() {
-        return icon;
-    }
+    MaterialProperty* get_material();
 
-    SpeedProperty* get_speed() {
-        return speed;
-    }
+    PointsProperty* get_points();
 
-    MaterialProperty* get_material() {
-        return material;
-    }
-
-    PointsProperty* get_points() {
-        return points;
-    }
+    virtual void draw();
 };
 
 
 class ObjectStorage {
 protected:
-    std::unordered_map<std::string, EditorObject> objects = {};
+    std::map<std::string, EditorObject> objects = {};
 
 public:
-    bool from_json(nlohmann::json& data) {
-        try {
-            for (nlohmann::json::iterator it = data.begin(); it != data.end(); it++) {
-                std::string obj_name = it.key();
-                if (objects.find(obj_name) != objects.end()) {
-                    spdlog::warn(
-                        "Already parsed object with name {}, skipping",
-                        obj_name
-                    );
-                }
-                EditorObject obj = EditorObject(obj_name);
-                auto props = it.value();
+    bool from_json(nlohmann::json& data);
 
-                // TODO: maybe add different error handling options - skip,
-                // replace with default, etc
-                for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
-                    std::string key = pit.key();
+    bool from_json_file(const std::string &path);
 
-                    if (!key.compare("icon")) {
-                        IconProperty* i;
-                        try {
-                            i = new IconProperty(pit.value());
-                            i->validate();
-                        }
-                        catch (ValidationError& v_err) {
-                            spdlog::warn(v_err.what());
-                            continue;
-                        }
-                        obj.add_icon(i);
-                    }
-                    else if (!key.compare("speed")) {
-                        SpeedProperty* sp;
-                        try {
-                            sp = new SpeedProperty(
-                                pit.value()["value"],
-                                pit.value()["min"],
-                                pit.value()["max"]
-                            );
-                            sp->validate();
-                        }
-                        catch (ValidationError& v_err) {
-                            spdlog::warn(v_err.what());
-                            continue;
-                        }
-                        obj.add_speed(sp);
-                    }
-                    else if (!key.compare("material")) {
-                        MaterialProperty* mat;
-                        try {
-                            mat = new MaterialProperty(
-                                pit.value()["value"],
-                                pit.value()["choices"]
-                            );
-                            mat->validate();
-                        }
-                        catch (ValidationError& v_err) {
-                            spdlog::warn(v_err.what());
-                            continue;
-                        }
-                        obj.add_material(mat);
-                    }
-                    else if (!key.compare("points")) {
-                        PointsProperty* pts;
-                        try {
-                            pts = new PointsProperty(
-                                pit.value()
-                            );
-                            pts->validate();
-                        }
-                        catch (ValidationError& v_err) {
-                            spdlog::warn(v_err.what());
-                            continue;
-                        }
-                        obj.add_points(pts);
-                    }
-                    else {
-                        spdlog::warn(
-                            "Unable to find parse rules for key {}", pit.key()
-                        );
-                    }
-                }
-                spdlog::info("Parsed object: {}", obj.to_string());
-                objects.insert(std::make_pair(obj_name, obj));
-            }
-        }
-        catch (const nlohmann::detail::type_error& err) {
-            spdlog::warn(err.what());
-
-            return false;
-        }
-        return true;
-    }
-
-    bool from_json_file(const std::string &path) {
-        std::ifstream file;
-        nlohmann::json data;
-
-        file.open(path);
-        // TODO: more detailed error handling
-        if (!file.good()) {
-            spdlog::error("Unable to open {}", path);
-            return false;
-        }
-
-        try {
-            file >> data;
-        }
-        catch (const nlohmann::detail::parse_error& err) {
-            spdlog::error(err.what());
-
-            return false;
-        }
-
-        return from_json(data);
-    }
-
-    int size() {
-        return objects.size();
-    }
+    int size();
 
     // Will throw if object does not exist
-    const EditorObject& get_object(const std::string& name) {
-        return objects.at(name);
-    }
+    const EditorObject& get_object(const std::string& name);
 
-    bool add_object(const std::string& name, EditorObject obj) {
-        if (objects.find(name) != objects.end()) {
-            spdlog::warn(
-                "Unable to add object with name '{}': already exists",  name
-            );
-            return false;
-        }
-        else {
-            objects.insert(std::make_pair(name, obj));
-            return true;
-        }
-    }
+    bool add_object(const std::string& name, EditorObject obj);
 
-    bool add_object(const std::string& name) {
-        return add_object(name, EditorObject(name));
-    }
+    bool add_object(const std::string& name);
 
-    nlohmann::json to_json() {
-        nlohmann::json data;
+    nlohmann::json to_json();
 
-        for (auto& [k, v]: objects) {
-            data[k] = v.to_json();
-        }
+    bool to_json_file(const std::string& path);
 
-        return data;
-    }
-
-    bool to_json_file(const std::string& path) {
-        nlohmann::json data = to_json();
-
-        std::ofstream file;
-
-        file.open(path);
-        if (!file.good()) {
-            spdlog::error("Unable to open {}", path);
-            return false;
-        }
-
-        try {
-            file << data;
-        }
-        catch (const nlohmann::detail::parse_error& err) {
-            spdlog::error(err.what());
-            return false;
-        }
-
-        return true;
-    }
+    virtual void draw();
 };

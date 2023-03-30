@@ -15,9 +15,16 @@ set(OpenGL_GL_PREFERENCE GLVND)
 add_executable(editor)
 
 target_sources(editor PRIVATE
+    src/err_logger.cpp
+    src/err_logger.hpp
     src/validators.hpp
+    src/properties.cpp
     src/properties.hpp
+    src/objects.cpp
     src/objects.hpp
+    src/menu.cpp
+    src/menu.hpp
+    src/window.cpp
     src/window.hpp
     src/main.cpp
 )
