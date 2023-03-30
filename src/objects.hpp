@@ -216,33 +216,12 @@ public:
 };
 
 
-class JsonParser {
-private:
-    std::string path;
+class ObjectStorage {
+protected:
+    std::unordered_map<std::string, EditorObject> objects = {};
 
 public:
-    JsonParser(const std::string& p) : path(p) {}
-
-    bool parse(std::unordered_map<std::string, EditorObject>& objects) {
-        std::ifstream file;
-        nlohmann::json data;
-
-        file.open(path);
-        // TODO: more detailed error handling
-        if (!file.good()) {
-            spdlog::error("Unable to open {}", path);
-            return false;
-        }
-
-        try {
-            file >> data;
-        }
-        catch (const nlohmann::detail::parse_error& err) {
-            spdlog::error(err.what());
-
-            return false;
-        }
-
+    bool from_json(nlohmann::json& data) {
         try {
             for (nlohmann::json::iterator it = data.begin(); it != data.end(); it++) {
                 std::string obj_name = it.key();
@@ -332,20 +311,30 @@ public:
 
             return false;
         }
-
         return true;
     }
-};
 
+    bool from_json_file(const std::string &path) {
+        std::ifstream file;
+        nlohmann::json data;
 
-class ObjectStorage {
-protected:
-    std::unordered_map<std::string, EditorObject> objects = {};
+        file.open(path);
+        // TODO: more detailed error handling
+        if (!file.good()) {
+            spdlog::error("Unable to open {}", path);
+            return false;
+        }
 
-public:
-    void populate_from_json(const std::string& p) {
-        JsonParser jp = JsonParser(p);
-        jp.parse(objects);
+        try {
+            file >> data;
+        }
+        catch (const nlohmann::detail::parse_error& err) {
+            spdlog::error(err.what());
+
+            return false;
+        }
+
+        return from_json(data);
     }
 
     int size() {

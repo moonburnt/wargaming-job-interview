@@ -27,7 +27,7 @@ int main(int argc, char* const* argv) {
     spdlog::info("Attempting to load json on path {}", path);
 
     ObjectStorage storage;
-    storage.populate_from_json(path);
+    storage.from_json_file(path);
 
     spdlog::info("Done. Successfully fetched {} objects", storage.size());
 
