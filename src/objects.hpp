@@ -12,27 +12,27 @@ class EditorObject {
 protected:
     std::string name;
     // TODO: store everything in a map. For now, this jank will do instead
-    Icon* icon = nullptr;
-    Speed* speed = nullptr;
-    Material* material = nullptr;
-    Points* points = nullptr;
+    IconProperty* icon = nullptr;
+    SpeedProperty* speed = nullptr;
+    MaterialProperty* material = nullptr;
+    PointsProperty* points = nullptr;
 
 public:
     EditorObject(const std::string& n) : name(n) {}
 
-    void add_icon(Icon* i) {
+    void add_icon(IconProperty* i) {
         icon = i;
     }
 
-    void add_speed(Speed* sp) {
+    void add_speed(SpeedProperty* sp) {
         speed = sp;
     }
 
-    void add_material(Material* mat) {
+    void add_material(MaterialProperty* mat) {
         material = mat;
     }
 
-    void add_points(Points* pts) {
+    void add_points(PointsProperty* pts) {
         points = pts;
     }
 
@@ -77,19 +77,19 @@ public:
         return data;
     }
 
-    Icon* get_icon() {
+    IconProperty* get_icon() {
         return icon;
     }
 
-    Speed* get_speed() {
+    SpeedProperty* get_speed() {
         return speed;
     }
 
-    Material* get_material() {
+    MaterialProperty* get_material() {
         return material;
     }
 
-    Points* get_points() {
+    PointsProperty* get_points() {
         return points;
     }
 };
@@ -119,9 +119,9 @@ public:
                     std::string key = pit.key();
 
                     if (!key.compare("icon")) {
-                        Icon* i;
+                        IconProperty* i;
                         try {
-                            i = new Icon(pit.value());
+                            i = new IconProperty(pit.value());
                             i->validate();
                         }
                         catch (ValidationError& v_err) {
@@ -131,9 +131,9 @@ public:
                         obj.add_icon(i);
                     }
                     else if (!key.compare("speed")) {
-                        Speed* sp;
+                        SpeedProperty* sp;
                         try {
-                            sp = new Speed(
+                            sp = new SpeedProperty(
                                 pit.value()["value"],
                                 pit.value()["min"],
                                 pit.value()["max"]
@@ -147,9 +147,9 @@ public:
                         obj.add_speed(sp);
                     }
                     else if (!key.compare("material")) {
-                        Material* mat;
+                        MaterialProperty* mat;
                         try {
-                            mat = new Material(
+                            mat = new MaterialProperty(
                                 pit.value()["value"],
                                 pit.value()["choices"]
                             );
@@ -162,9 +162,9 @@ public:
                         obj.add_material(mat);
                     }
                     else if (!key.compare("points")) {
-                        Points* pts;
+                        PointsProperty* pts;
                         try {
-                            pts = new Points(
+                            pts = new PointsProperty(
                                 pit.value()
                             );
                             pts->validate();

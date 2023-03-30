@@ -18,6 +18,7 @@ target_sources(editor PRIVATE
     src/validators.hpp
     src/properties.hpp
     src/objects.hpp
+    src/window.hpp
     src/main.cpp
 )
 

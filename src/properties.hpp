@@ -82,9 +82,9 @@ public:
 
 
 // TODO: also store image
-class Icon : public ObjectProperty<std::string> {
+class IconProperty : public ObjectProperty<std::string> {
 public:
-    Icon(std::string p) : ObjectProperty(p) {
+    IconProperty(std::string p) : ObjectProperty(p) {
         set_name("icon");
 
         add_validator(new FilePathValidator());
@@ -92,9 +92,9 @@ public:
 };
 
 
-class Speed : public ObjectProperty<float> {
+class SpeedProperty : public ObjectProperty<float> {
 public:
-    Speed(float val, float min, float max) : ObjectProperty(val) {
+    SpeedProperty(float val, float min, float max) : ObjectProperty(val) {
         set_name("speed");
 
         FloatInRangeValidator* v = new FloatInRangeValidator();
@@ -105,9 +105,9 @@ public:
 };
 
 
-class Material : public ObjectProperty<std::string> {
+class MaterialProperty : public ObjectProperty<std::string> {
 public:
-    Material(std::string val, std::vector<std::string> choices) : ObjectProperty(val) {
+    MaterialProperty(std::string val, std::vector<std::string> choices) : ObjectProperty(val) {
         set_name("material");
 
         TextChoicesValidator* v = new TextChoicesValidator();
@@ -117,9 +117,9 @@ public:
 };
 
 
-class Points: public ObjectProperty<int> {
+class PointsProperty: public ObjectProperty<int> {
 public:
-    Points(int val) : ObjectProperty(val) {
+    PointsProperty(int val) : ObjectProperty(val) {
         set_name("points");
 
         add_validator(new IntegerPositiveValidator());
