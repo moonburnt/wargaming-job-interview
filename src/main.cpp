@@ -123,8 +123,7 @@ public:
 template <typename TIn, typename TOut> class ObjectProperty {
 protected:
     std::string name = "";
-    // bool is_validated = false;
-    // bool validation_result = false;
+    bool is_validated = false;
     TIn data;
     std::optional<TOut> validated_data;
 
@@ -149,18 +148,12 @@ public:
         validators.push_back(f);
     }
 
-    // TODO: throw on error
     void perform_validation() {
         for (auto i: validators) {
             i->validate(data);
         }
+        is_validated = true;
     }
-
-    // bool validate() {
-    //     validation_result = perform_validation();
-    //     is_validated = true;
-    //     return validation_result;
-    // };
 
     virtual void perform_serialization() = 0;
 
@@ -172,8 +165,15 @@ public:
     }
 
     std::optional<TOut> get_validated_data() {
-        // TODO: refuse to return data if is_validated is false
-        return validated_data;
+        if (!is_validated) {
+            throw ValidationError(
+                "Unable to get validated data from non-validated source. "
+                "Run perform_validation() and try again"
+            );
+        }
+        else {
+            return validated_data;
+        }
     }
 
     virtual std::string to_string() {
