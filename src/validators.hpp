@@ -12,13 +12,9 @@ protected:
     const std::string err;
 
 public:
-    ValidationError(const std::string& d): err(
-        fmt::format("Validation error: {}", d)
-    ) {}
+    ValidationError(const std::string& d);
 
-    const char* what() const throw() override {
-        return err.c_str();
-    }
+    const char* what() const throw() override;
 };
 
 template <typename T> class Validator {
@@ -28,20 +24,7 @@ public:
 };
 
 class FilePathValidator: public Validator<std::string> {
-    void validate(std::string path) override {
-        spdlog::debug("Performing validation of {}", path);
-        std::filesystem::path fp = path;
-        if (std::filesystem::exists(fp)) {
-            spdlog::debug("Success");
-            return;
-        }
-        else {
-            spdlog::debug("Fail");
-            throw ValidationError(
-                fmt::format("Path {} does not lead to a file", path)
-            );
-        }
-    }
+    void validate(std::string path) override;
 };
 
 
@@ -51,26 +34,10 @@ protected:
     float max = 0.0f;
 
 public:
-    void set_min(float m) {
-        min = m;
-    }
-    void set_max(float m) {
-        max = m;
-    }
+    void set_min(float m);
+    void set_max(float m);
 
-    void validate(float val) override {
-        spdlog::debug("Performing validation of {}", val);
-        if (min < val < max) {
-            spdlog::debug("Success");
-            return;
-        }
-        else {
-            spdlog::debug("Fail");
-            throw ValidationError(
-                fmt::format("{} is not in between {} and {}", val, min, max)
-            );
-        }
-    }
+    void validate(float val) override;
 };
 
 
@@ -79,40 +46,13 @@ protected:
     std::vector<std::string> choices = {};
 
 public:
-    void set_choices(std::vector<std::string> c) {
-        choices = c;
-    }
+    void set_choices(std::vector<std::string> c);
 
-    void validate(std::string str) override {
-        spdlog::debug("Performing validation of {}", str);
-        for(std::string& ch: choices) {
-            if(!str.compare(ch)) {
-                spdlog::debug("Success");
-                return;
-            }
-        }
-
-        spdlog::debug("Fail");
-        throw ValidationError(
-            fmt::format("{} is not one of the valid choices", str)
-        );
-    }
+    void validate(std::string str) override;
 };
 
 
 class IntegerPositiveValidator: public Validator<int> {
 public:
-    void validate(int i) override {
-        spdlog::debug("Performing validation of {}", i);
-        if (i >= 0) {
-            spdlog::debug("Success");
-            return;
-        }
-        else {
-            spdlog::debug("Fail");
-            throw ValidationError(
-                fmt::format("{} is not a positive integer", i)
-            );
-        }
-    }
+    void validate(int i) override;
 };

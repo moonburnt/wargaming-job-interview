@@ -13,6 +13,7 @@
 
 #include "objects.hpp"
 
+// FD
 class AppWindow;
 
 
@@ -29,22 +30,11 @@ private:
     const std::string name;
 
 public:
-    ImGuiInfoWindow(const std::string& n, const std::string& txt)
-        : msg(txt)
-        , name(n) {}
+    ImGuiInfoWindow(const std::string& n, const std::string& txt);
 
-    void draw() override {
-        if (!is_open) {
-            return;
-        }
-
-        if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
-            ImGui::Text("%s", msg.c_str());
-            ImGui::PopStyleVar();
-        }
-        ImGui::End();
-    }
+    void draw() override;
 };
+
 
 class ImGuiMenu {
 private:

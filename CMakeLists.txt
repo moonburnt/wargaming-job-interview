@@ -17,6 +17,7 @@ add_executable(editor)
 target_sources(editor PRIVATE
     src/err_logger.cpp
     src/err_logger.hpp
+    src/validators.cpp
     src/validators.hpp
     src/properties.cpp
     src/properties.hpp
