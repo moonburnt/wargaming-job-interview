@@ -1,7 +1,40 @@
 #include "properties.hpp"
+#include "misc/cpp/imgui_stdlib.h"
 
 
-IconProperty::IconProperty(std::string p) : ObjectProperty(p) {
+void IconView::draw() {
+    ImGui::Text(
+        "%s",
+        fmt::format(
+            "{}: current value: {}, validated value: {}",
+            parent->get_name(),
+            parent->get_data(),
+            parent->get_validated_data()
+        ).c_str()
+    );
+
+    ImGui::InputText("", &current_txt);
+
+    bool confirmed = true;
+
+    if (ImGui::Button("Validate")) {
+        parent->set_value(current_txt);
+        try {
+            parent->validate();
+        }
+        catch (ValidationError& v_err) {
+            ExceptionLogger::get_logger().log_exception(v_err.what());
+            confirmed = false;
+        }
+
+        if (confirmed) {
+            current_txt = "";
+        }
+    }
+}
+
+
+IconProperty::IconProperty(std::string p) : ObjectProperty(p), view(IconView(this)) {
     set_name("icon");
 
     add_validator(new FilePathValidator());

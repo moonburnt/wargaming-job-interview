@@ -6,10 +6,13 @@
 #include "validators.hpp"
 #include <string>
 #include <optional>
+#include "err_logger.hpp"
 
 #include "imgui.h"
 #include "rlImGui.h"
 #include "rlImGuiColors.h"
+
+#include "view.hpp"
 
 
 template <typename T> class ObjectProperty {
@@ -55,20 +58,15 @@ public:
 
     // Validate data
     std::optional<T> validate() {
-        perform_validation();
+        if (!is_validated) {
+            perform_validation();
+        }
+
         return validated_data;
     }
 
     T get_validated_data() {
-        if (!is_validated) {
-            throw ValidationError(
-                "Unable to get validated data from non-validated source. "
-                "Run perform_validation() and try again"
-            );
-        }
-        else {
-            return validated_data.value();
-        }
+        return validated_data.value_or(T());
     }
 
     virtual std::string to_string() {
@@ -84,16 +82,35 @@ public:
     }
 
     virtual void draw() {
-        spdlog::info("Drawing property {}", get_name());
         ImGui::Text("%s", to_string().c_str());
     }
+};
+
+class IconProperty;
+
+class IconView {
+private:
+    IconProperty* parent;
+
+    std::string current_txt;
+public:
+    IconView(IconProperty* p): parent(p) {}
+
+    void draw();
 };
 
 
 // TODO: also store image
 class IconProperty : public ObjectProperty<std::string> {
+private:
+    IconView view;
+
 public:
     IconProperty(std::string p);
+
+    void draw() override {
+        view.draw();
+    }
 };
 
 

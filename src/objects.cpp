@@ -11,7 +11,30 @@ void ImGuiEditorObjectWindow::draw() {
     }
 
     if (ImGui::Begin(parent->get_name().c_str(), &is_open, ImGuiWindowFlags_None)) {
-        ImGui::Text("%s", parent->to_string().c_str());
+        IconProperty* icon = parent->get_icon();
+        if (icon != nullptr) {
+            icon->draw();
+            // ImGui::Text("Icon: %s", icon->to_string().c_str());
+        }
+
+        SpeedProperty* speed = parent->get_speed();
+        if (speed != nullptr) {
+            // ImGui::Text("Speed: %s", speed->to_string().c_str());
+            speed->draw();
+        }
+
+        MaterialProperty* material = parent->get_material();
+        if (material != nullptr) {
+            // ImGui::Text("Material: %s", material->to_string().c_str());
+            material->draw();
+        }
+
+        PointsProperty* points = parent->get_points();
+        if (points != nullptr) {
+            // ImGui::Text("Points: %s", points->to_string().c_str());
+            points->draw();
+        }
+        // ImGui::Text("%s", parent->to_string().c_str());
         ImGui::PopStyleVar();
     }
     ImGui::End();
@@ -156,60 +179,59 @@ bool ObjectStorage::from_json(nlohmann::json& data) {
             for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
                 std::string key = pit.key();
 
+                // New traversal method may cause issues on incorrectly formatted json
+
                 if (!key.compare("icon")) {
-                    IconProperty* i;
+                    IconProperty* i = new IconProperty(pit.value());
+
                     try {
-                        i = new IconProperty(pit.value());
                         i->validate();
                     }
                     catch (ValidationError& v_err) {
                         ExceptionLogger::get_logger().log_exception(v_err.what());
-                        continue;
                     }
                     obj.add_icon(i);
                 }
                 else if (!key.compare("speed")) {
-                    SpeedProperty* sp;
-                    try {
-                        sp = new SpeedProperty(
+                    SpeedProperty* sp =
+                        new SpeedProperty(
                             pit.value()["value"],
                             pit.value()["min"],
                             pit.value()["max"]
                         );
+
+                    try {
                         sp->validate();
                     }
                     catch (ValidationError& v_err) {
                         ExceptionLogger::get_logger().log_exception(v_err.what());
-                        continue;
                     }
                     obj.add_speed(sp);
                 }
                 else if (!key.compare("material")) {
-                    MaterialProperty* mat;
+                    MaterialProperty* mat = new MaterialProperty(
+                        pit.value()["value"],
+                        pit.value()["choices"]
+                    );
+
                     try {
-                        mat = new MaterialProperty(
-                            pit.value()["value"],
-                            pit.value()["choices"]
-                        );
                         mat->validate();
                     }
                     catch (ValidationError& v_err) {
                         ExceptionLogger::get_logger().log_exception(v_err.what());
-                        continue;
                     }
                     obj.add_material(mat);
                 }
                 else if (!key.compare("points")) {
-                    PointsProperty* pts;
+                    PointsProperty* pts = new PointsProperty(
+                        pit.value()
+                    );
+
                     try {
-                        pts = new PointsProperty(
-                            pit.value()
-                        );
                         pts->validate();
                     }
                     catch (ValidationError& v_err) {
                         ExceptionLogger::get_logger().log_exception(v_err.what());
-                        continue;
                     }
                     obj.add_points(pts);
                 }
