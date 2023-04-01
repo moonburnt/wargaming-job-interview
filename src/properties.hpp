@@ -7,6 +7,10 @@
 #include <string>
 #include <optional>
 
+#include "imgui.h"
+#include "rlImGui.h"
+#include "rlImGuiColors.h"
+
 
 template <typename T> class ObjectProperty {
 protected:
@@ -81,6 +85,7 @@ public:
 
     virtual void draw() {
         spdlog::info("Drawing property {}", get_name());
+        ImGui::Text("%s", to_string().c_str());
     }
 };
 

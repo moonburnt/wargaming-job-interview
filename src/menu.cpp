@@ -23,23 +23,16 @@ void ImGuiInfoWindow::draw() {
 }
 
 
-ImGuiMenu::ImGuiMenu(AppWindow* w): window(w) {
+ImGuiMenu::ImGuiMenu(AppWindow* w): window(w), storage(this) {
     // submenus.push_back(new PropEditorWindow());
 }
 
 
 void ImGuiMenu::update(float) {
-    // cleanup
-    submenus.erase(
-        std::remove_if(
-            submenus.begin(),
-            submenus.end(),
-            [](MenuWindow* i){ return !(i->is_open); }),
-        submenus.end()
-    );
+    submenus.remove_dead();
 
     for (auto i: ExceptionLogger::get_logger().get_messages()) {
-        submenus.push_back(new ImGuiInfoWindow("Error", i));
+        submenus.add(new ImGuiInfoWindow("Error", i));
     }
     ExceptionLogger::get_logger().clear();
 }
@@ -70,14 +63,19 @@ void ImGuiMenu::draw() {
 
         if (ImGui::BeginMenu("Props")) {
             storage.draw();
+            // for (auto & [k, v]: objects) {
+            //     if (ImGui::MenuItem(k.c_str())) {
+            //         v.draw();
+            //     }
+            // }
+
+            // ImGui::MenuItem("------");
+
+            // ImGui::MenuItem("Create New");
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
 
-    for (auto i: submenus) {
-        if (i->is_open) {
-            i->draw();
-        }
-    }
+    submenus.draw();
 }

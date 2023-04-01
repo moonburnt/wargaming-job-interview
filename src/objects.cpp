@@ -2,8 +2,48 @@
 #include "err_logger.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
+#include "menu.hpp"
 
-EditorObject::EditorObject(const std::string& n) : name(n) {}
+
+void ImGuiEditorObjectWindow::draw() {
+    if (!is_open) {
+        return;
+    }
+
+    if (ImGui::Begin(parent->get_name().c_str(), &is_open, ImGuiWindowFlags_None)) {
+        ImGui::Text("%s", parent->to_string().c_str());
+        ImGui::PopStyleVar();
+    }
+    ImGui::End();
+}
+
+
+EditorObject::EditorObject(const std::string& n) : name(n) {
+    // window = new ImGuiInfoWindow(n, to_string());
+    // window = new ImGuiEditorObjectWindow(this);
+}
+
+EditorObject::~EditorObject() {
+
+    // TODO: investigate. seems like it cause segfault for now
+    // if (icon != nullptr) {
+    //     delete icon;
+    // }
+    // if (speed != nullptr) {
+    //     delete speed;
+    // }
+    // if (material != nullptr) {
+    //     delete material;
+    // }
+    // if (points != nullptr) {
+    //     delete points;
+    // }
+
+    // Will be deleted by parent's cleanup
+    if (window != nullptr) {
+        window->must_die = true;
+    }
+}
 
 void EditorObject::add_icon(IconProperty* i) {
     icon = i;
@@ -78,22 +118,22 @@ PointsProperty* EditorObject::get_points() {
     return points;
 }
 
-void EditorObject::draw() {
-    spdlog::info("drawing object {}", get_name());
+// void EditorObject::draw() {
+//     spdlog::info("drawing object {}", get_name());
 
-    if (icon != nullptr) {
-        icon->draw();
-    }
-    if (speed != nullptr) {
-        speed->draw();
-    }
-    if (material != nullptr) {
-        material->draw();
-    }
-    if (points != nullptr) {
-        points->draw();
-    }
-}
+//     if (icon != nullptr) {
+//         icon->draw();
+//     }
+//     if (speed != nullptr) {
+//         speed->draw();
+//     }
+//     if (material != nullptr) {
+//         material->draw();
+//     }
+//     if (points != nullptr) {
+//         points->draw();
+//     }
+// }
 
 
 bool ObjectStorage::from_json(nlohmann::json& data) {
@@ -275,11 +315,22 @@ bool ObjectStorage::to_json_file(const std::string& path) {
 void ObjectStorage::draw() {
     for (auto & [k, v]: objects) {
         if (ImGui::MenuItem(k.c_str())) {
-            v.draw();
+            // parent_menu->add_submenu(v.window);
+            // v.window.is_open = true;
+            // v.get_window()->is_open = true;
+            ImGuiEditorObjectWindow* w = v.get_window();
+            w->is_open = true;
+            parent_menu->add_submenu(w);
         }
     }
 
     ImGui::MenuItem("------");
 
     ImGui::MenuItem("Create New");
+
+    // for (auto i: submenus) {
+    //     if (i->is_open) {
+    //         i->draw();
+    //     }
+    // }
 }

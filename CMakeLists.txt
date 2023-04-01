@@ -17,6 +17,7 @@ add_executable(editor)
 target_sources(editor PRIVATE
     src/err_logger.cpp
     src/err_logger.hpp
+    src/view.hpp
     src/validators.cpp
     src/validators.hpp
     src/properties.cpp
@@ -31,7 +32,7 @@ target_sources(editor PRIVATE
 )
 
 target_compile_options(editor PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:-Wall -Wextra -Wpedantic -Werror -Wextra-semi -Wsuggest-override -Wno-missing-field-initializers>
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:-Wall -Wno-unused -Wextra -Wpedantic -Werror -Wextra-semi -Wsuggest-override -Wno-missing-field-initializers>
     $<$<CXX_COMPILER_ID:MSVC>:/Wall /w34263 /w34266>
     $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>>:-fsanitize=address>
 )
