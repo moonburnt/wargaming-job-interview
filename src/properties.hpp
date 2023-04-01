@@ -86,7 +86,11 @@ public:
     }
 };
 
+// FDs for views
 class IconProperty;
+class SpeedProperty;
+class MaterialProperty;
+class PointsProperty;
 
 class IconView {
 private:
@@ -95,6 +99,18 @@ private:
     std::string current_txt;
 public:
     IconView(IconProperty* p): parent(p) {}
+
+    void draw();
+};
+
+
+class SpeedView {
+private:
+    SpeedProperty* parent;
+
+    float current;
+public:
+    SpeedView(SpeedProperty* p): parent(p) {}
 
     void draw();
 };
@@ -115,8 +131,27 @@ public:
 
 
 class SpeedProperty : public ObjectProperty<float> {
+private:
+    SpeedView view;
+
+protected:
+    float min;
+    float max;
+
 public:
-    SpeedProperty(float val, float min, float max);
+    SpeedProperty(float val, float _min, float _max);
+
+    float get_min() {
+        return min;
+    }
+
+    float get_max() {
+        return max;
+    }
+
+    void draw() override {
+        view.draw();
+    }
 };
 
 

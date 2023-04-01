@@ -18,15 +18,6 @@
 class AppWindow;
 
 
-// class MenuWindow {
-// public:
-// 	bool is_open = true;
-//     virtual void draw() = 0;
-
-//     virtual ~MenuWindow() = default;
-// };
-
-
 class ImGuiInfoWindow: public MenuWindow {
 private:
     const std::string msg;
@@ -90,17 +81,6 @@ public:
             submenus.end()
         );
     }
-
-    // virtual void update(float) {
-    //     // cleanup
-    //     submenus.erase(
-    //         std::remove_if(
-    //             submenus.begin(),
-    //             submenus.end(),
-    //             [](MenuWindow* i){ return !(i->is_open); }),
-    //         submenus.end()
-    //     );
-    // }
 
     void draw() {
         for (auto i: submenus) {

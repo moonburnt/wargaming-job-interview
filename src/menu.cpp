@@ -24,7 +24,6 @@ void ImGuiInfoWindow::draw() {
 
 
 ImGuiMenu::ImGuiMenu(AppWindow* w): window(w), storage(this) {
-    // submenus.push_back(new PropEditorWindow());
 }
 
 
@@ -63,15 +62,6 @@ void ImGuiMenu::draw() {
 
         if (ImGui::BeginMenu("Props")) {
             storage.draw();
-            // for (auto & [k, v]: objects) {
-            //     if (ImGui::MenuItem(k.c_str())) {
-            //         v.draw();
-            //     }
-            // }
-
-            // ImGui::MenuItem("------");
-
-            // ImGui::MenuItem("Create New");
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
