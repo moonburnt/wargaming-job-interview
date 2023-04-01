@@ -78,7 +78,9 @@ public:
                 &current_name
             );
 
-            if (ImGui::Checkbox("Has Icon", &has_icon)) {
+            ImGui::Checkbox("Has Icon", &has_icon);
+
+            if (has_icon) {
                 ImGui::InputText(
                     "Enter item's icon path",
                     &icon_path
@@ -88,7 +90,8 @@ public:
                 icon_path = "";
             }
 
-            if (ImGui::Checkbox("Has Speed", &has_speed)) {
+            ImGui::Checkbox("Has Speed", &has_speed);
+            if (has_speed) {
                 ImGui::InputFloat("Enter min speed value", &min_speed);
                 ImGui::InputFloat("Enter max speed value", &max_speed);
             }
@@ -97,7 +100,8 @@ public:
                 max_speed = 0.0f;
             }
 
-            if (ImGui::Checkbox("Has Material", &has_material)) {
+            ImGui::Checkbox("Has Material", &has_material);
+            if (has_material) {
                 ImGui::Text("%s", choices_string.c_str());
 
                 ImGui::InputText(
@@ -110,11 +114,11 @@ public:
                             material_choices.begin(),
                             material_choices.end(),
                             current_mat
-                        ) != material_choices.end()
+                        ) == material_choices.end()
                     ) {
                         material_choices.push_back(current_mat);
-                        current_mat = "";
                         choices_string += (current_mat + ", ");
+                        current_mat = "";
                     }
                     else {
                         ExceptionLogger::get_logger().log_exception(
@@ -132,7 +136,8 @@ public:
                 material_choices.clear();
             }
 
-            if (ImGui::Checkbox("Has Points", &has_points)) {
+            ImGui::Checkbox("Has Points", &has_points);
+            if (has_points) {
                 ImGui::InputInt("Enter item's points", &points);
             }
             else {
@@ -169,6 +174,13 @@ public:
                 if (has_speed && (min_speed >= max_speed)) {
                     ExceptionLogger::get_logger().log_exception(
                         "Min speed can't be less or equal to max speed"
+                    );
+                    has_errors = true;
+                }
+
+                if (!has_icon && !has_material && !has_speed && !has_points) {
+                    ExceptionLogger::get_logger().log_exception(
+                        "Must have at least one prop"
                     );
                     has_errors = true;
                 }

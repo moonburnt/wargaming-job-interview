@@ -38,18 +38,10 @@ void ImGuiMenu::draw() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load")) {
-                // TODO: unhardcode the path
-                // Either show native system file selection dialog,
-                // or pick one of imgui-powered solutions from github
-                // storage.from_json_file("./components.json");
                 add_submenu(new LoadFileWindow(&storage));
             }
 
             if (ImGui::MenuItem("Save")) {
-                // TODO: unhardcode the path
-                // Either show native system file selection dialog,
-                // or pick one of imgui-powered solutions from github
-                // storage.to_json_file("./components.json");
                 add_submenu(new SaveFileWindow(&storage));
             }
 
@@ -61,6 +53,12 @@ void ImGuiMenu::draw() {
 
         if (ImGui::BeginMenu("Props")) {
             storage.draw();
+
+            ImGui::MenuItem("------");
+
+            if (ImGui::MenuItem("Create New")) {
+                submenus.add(new CreateObjectWindow(&storage));
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();

@@ -339,22 +339,9 @@ bool ObjectStorage::to_json_file(const std::string& path) {
 void ObjectStorage::draw() {
     for (auto & [k, v]: objects) {
         if (ImGui::MenuItem(k.c_str())) {
-            // parent_menu->add_submenu(v.window);
-            // v.window.is_open = true;
-            // v.get_window()->is_open = true;
             ImGuiEditorObjectWindow* w = v.get_window();
             w->is_open = true;
             parent_menu->add_submenu(w);
         }
     }
-
-    ImGui::MenuItem("------");
-
-    ImGui::MenuItem("Create New");
-
-    // for (auto i: submenus) {
-    //     if (i->is_open) {
-    //         i->draw();
-    //     }
-    // }
 }
