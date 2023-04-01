@@ -129,6 +129,19 @@ public:
 };
 
 
+class PointsView {
+private:
+    PointsProperty* parent;
+
+    int current = 0;
+
+public:
+    PointsView(PointsProperty* p): parent(p) {}
+
+    void draw();
+};
+
+
 // TODO: also store image
 class IconProperty : public ObjectProperty<std::string> {
 private:
@@ -193,13 +206,13 @@ public:
 
 
 class PointsProperty: public ObjectProperty<int> {
-// private:
-//     PointsView view;
+private:
+    PointsView view;
 
 public:
     PointsProperty(int val);
 
-    // void draw() override {
-    //     view.draw();
-    // }
+    void draw() override {
+        view.draw();
+    }
 };

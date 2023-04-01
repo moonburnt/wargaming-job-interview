@@ -99,6 +99,36 @@ void MaterialView::draw() {
 }
 
 
+void PointsView::draw() {
+    ImGui::Text(
+        "%s",
+        fmt::format(
+            "{}: current value: {}, validated value: {}",
+            parent->get_name(),
+            parent->get_data(),
+            parent->get_validated_data()
+        ).c_str()
+    );
+
+
+    ImGui::InputInt(
+        fmt::format("Enter {} value", parent->get_name()).c_str(),
+        &current
+    );
+
+    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
+        parent->set_value(current);
+        try {
+            parent->validate();
+        }
+        catch (ValidationError& v_err) {
+            ExceptionLogger::get_logger().log_exception(v_err.what());
+        }
+    }
+}
+
+
+
 IconProperty::IconProperty(std::string p) : ObjectProperty(p), view(IconView(this)) {
     set_name("icon");
 
@@ -132,7 +162,9 @@ MaterialProperty::MaterialProperty(std::string val, std::vector<std::string> ch)
 
 
 
-PointsProperty::PointsProperty(int val) : ObjectProperty(val) {
+PointsProperty::PointsProperty(int val)
+    : ObjectProperty(val)
+    , view(PointsView(this)) {
     set_name("points");
 
     add_validator(new IntegerPositiveValidator());
