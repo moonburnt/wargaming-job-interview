@@ -116,6 +116,19 @@ public:
 };
 
 
+class MaterialView {
+private:
+    MaterialProperty* parent;
+
+    int current = 0;
+
+public:
+    MaterialView(MaterialProperty* p): parent(p) {}
+
+    void draw();
+};
+
+
 // TODO: also store image
 class IconProperty : public ObjectProperty<std::string> {
 private:
@@ -156,12 +169,37 @@ public:
 
 
 class MaterialProperty : public ObjectProperty<std::string> {
+private:
+    MaterialView view;
+
+protected:
+    std::vector<std::string> choices;
+
 public:
     MaterialProperty(std::string val, std::vector<std::string> choices);
+
+    const std::vector<std::string>& get_choices() {
+        return choices;
+    }
+
+    int get_choices_amount() {
+        return choices.size();
+    }
+
+    void draw() override {
+        view.draw();
+    }
 };
 
 
 class PointsProperty: public ObjectProperty<int> {
+// private:
+//     PointsView view;
+
 public:
     PointsProperty(int val);
+
+    // void draw() override {
+    //     view.draw();
+    // }
 };

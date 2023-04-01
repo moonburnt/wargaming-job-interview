@@ -59,6 +59,45 @@ void SpeedView::draw() {
     }
 }
 
+void MaterialView::draw() {
+    ImGui::Text(
+        "%s",
+        fmt::format(
+            "{}: current value: {}, validated value: {}",
+            parent->get_name(),
+            parent->get_data(),
+            parent->get_validated_data()
+        ).c_str()
+    );
+
+    // This can be optimized
+    std::vector<std::string> choices = parent->get_choices();
+
+    if (ImGui::BeginCombo(fmt::format("Enter {} value", parent->get_name()).c_str(), choices[current].c_str())) {
+        for (int i = 0; i < static_cast<int>(choices.size()); i++) {
+            const bool is_selected = (current == i);
+            if (ImGui::Selectable(choices[i].c_str(), is_selected)) {
+                current = i;
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
+        parent->set_value(choices[current]);
+        try {
+            parent->validate();
+        }
+        catch (ValidationError& v_err) {
+            ExceptionLogger::get_logger().log_exception(v_err.what());
+        }
+    }
+}
+
 
 IconProperty::IconProperty(std::string p) : ObjectProperty(p), view(IconView(this)) {
     set_name("icon");
@@ -80,7 +119,10 @@ SpeedProperty::SpeedProperty(float val, float _min, float _max)
 }
 
 
-MaterialProperty::MaterialProperty(std::string val, std::vector<std::string> choices) : ObjectProperty(val) {
+MaterialProperty::MaterialProperty(std::string val, std::vector<std::string> ch)
+    : ObjectProperty(val)
+    , view(MaterialView(this))
+    , choices(ch) {
     set_name("material");
 
     TextChoicesValidator* v = new TextChoicesValidator();
