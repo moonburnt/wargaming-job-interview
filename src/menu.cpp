@@ -17,7 +17,6 @@ void ImGuiInfoWindow::draw() {
 
     if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
         ImGui::Text("%s", msg.c_str());
-        ImGui::PopStyleVar();
     }
     ImGui::End();
 }

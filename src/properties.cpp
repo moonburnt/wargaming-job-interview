@@ -1,6 +1,8 @@
 #include "properties.hpp"
 #include "misc/cpp/imgui_stdlib.h"
-
+#include "objects.hpp"
+#include "menu.hpp"
+#include "view.hpp"
 
 void IconView::draw() {
     ImGui::Text(
@@ -19,12 +21,24 @@ void IconView::draw() {
     );
 
     if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
+        showing_texture = false;
         parent->set_value(current_txt);
         try {
             parent->validate();
         }
         catch (ValidationError& v_err) {
             ExceptionLogger::get_logger().log_exception(v_err.what());
+        }
+    }
+
+    if (ImGui::Button(fmt::format("Show {}", parent->get_name()).c_str())) {
+        showing_texture = true;
+    }
+
+    if (showing_texture) {
+        std::optional<Texture> t = parent->get_texture();
+        if (t.has_value()) {
+            DrawTextureV(t.value(), {0.0f, 0.0f}, WHITE);
         }
     }
 }
@@ -129,7 +143,9 @@ void PointsView::draw() {
 
 
 
-IconProperty::IconProperty(std::string p) : ObjectProperty(p), view(IconView(this)) {
+IconProperty::IconProperty(std::string s)
+    : ObjectProperty(s)
+    , view(IconView(this)) {
     set_name("icon");
 
     add_validator(new FilePathValidator());

@@ -14,7 +14,6 @@
 
 #include "view.hpp"
 
-
 template <typename T> class ObjectProperty {
 protected:
     std::string name = "";
@@ -48,7 +47,7 @@ public:
         validators.push_back(f);
     }
 
-    void perform_validation() {
+    virtual void perform_validation() {
         for (auto i: validators) {
             i->validate(data);
         }
@@ -97,8 +96,12 @@ private:
     IconProperty* parent;
 
     std::string current_txt;
+
+    bool showing_texture = false;
+
 public:
-    IconView(IconProperty* p): parent(p) {}
+    IconView(IconProperty* p)
+        : parent(p) {}
 
     void draw();
 };
@@ -142,13 +145,33 @@ public:
 };
 
 
-// TODO: also store image
+class EditorObject;
+
+
 class IconProperty : public ObjectProperty<std::string> {
 private:
     IconView view;
+    std::optional<Texture> texture;
 
 public:
-    IconProperty(std::string p);
+    IconProperty(std::string str);
+    ~IconProperty() {
+        if (texture.has_value()) {
+            UnloadTexture(texture.value());
+        }
+    }
+
+    void perform_validation() override {
+        ObjectProperty<std::string>::perform_validation();
+        if (texture.has_value()) {
+            UnloadTexture(texture.value());
+        }
+        texture = LoadTexture(validated_data.value().c_str());
+    }
+
+    const std::optional<Texture>& get_texture() {
+        return texture;
+    }
 
     void draw() override {
         view.draw();

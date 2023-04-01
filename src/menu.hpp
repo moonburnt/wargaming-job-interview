@@ -36,25 +36,45 @@ public:
 };
 
 
-// class ImGuiEditorObjectWindow: public MenuWindow {
+// WIP
+// class LoadFileWindow: public MenuWindow {
 // private:
-//     EditorObject* parent;
+//     const std::string name;
+//     std::string current;
 
 // public:
-//     ImGuiEditorObjectWindow(EditorObject* p): parent(p) {}
+//     LoadFileWindow(const std::string n): name(n) {}
+
+//     void update(float) override {
+//         if (!is_open) {
+//             must_die = true;
+//         }
+//     }
 
 //     void draw() override {
 //         if (!is_open) {
 //             return;
 //         }
 
-//         if (ImGui::Begin(parent->get_name().c_str(), &is_open, ImGuiWindowFlags_None)) {
-//             ImGui::Text("%s", parent->to_string().c_str());
-//             ImGui::PopStyleVar();
+//         if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
+//             ImGui::InputText(
+//                 "Enter filepath",
+//                 &current
+//             );
+
+//             if (ImGui::Button("Load")) {
+//                 parent->set_value(current_txt);
+//                 try {
+//                     parent->validate();
+//                 }
+//                 catch (ValidationError& v_err) {
+//                     ExceptionLogger::get_logger().log_exception(v_err.what());
+//                 }
+//             }
 //         }
 //         ImGui::End();
 //     }
-// };
+// }
 
 
 class MenuStorage {

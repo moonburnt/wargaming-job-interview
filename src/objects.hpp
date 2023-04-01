@@ -11,6 +11,7 @@
 
 class ImGuiMenu;
 class EditorObject;
+class ObjectStorage;
 
 class ImGuiEditorObjectWindow: public MenuWindow {
 private:
@@ -19,9 +20,12 @@ private:
 public:
     ImGuiEditorObjectWindow(EditorObject* p): parent(p) {}
 
+    EditorObject* get_parent() {
+        return parent;
+    }
+
     void draw() override;
 };
-
 
 class EditorObject {
 protected:
@@ -42,7 +46,6 @@ public:
 
         return window;
     }
-    // ImGuiEditorObjectWindow window;
 
     EditorObject(const std::string& n);
 
@@ -95,7 +98,9 @@ protected:
     std::map<std::string, EditorObject> objects = {};
 
 public:
-    ObjectStorage(ImGuiMenu* p): parent_menu(p) {}
+    ObjectStorage(ImGuiMenu* p);
+
+    ImGuiMenu* get_parent();
 
     bool from_json(nlohmann::json& data);
 

@@ -14,34 +14,29 @@ void ImGuiEditorObjectWindow::draw() {
         IconProperty* icon = parent->get_icon();
         if (icon != nullptr) {
             icon->draw();
-            // ImGui::Text("Icon: %s", icon->to_string().c_str());
         }
 
         SpeedProperty* speed = parent->get_speed();
         if (speed != nullptr) {
-            // ImGui::Text("Speed: %s", speed->to_string().c_str());
             speed->draw();
         }
 
         MaterialProperty* material = parent->get_material();
         if (material != nullptr) {
-            // ImGui::Text("Material: %s", material->to_string().c_str());
             material->draw();
         }
 
         PointsProperty* points = parent->get_points();
         if (points != nullptr) {
-            // ImGui::Text("Points: %s", points->to_string().c_str());
             points->draw();
         }
-        // ImGui::Text("%s", parent->to_string().c_str());
-        ImGui::PopStyleVar();
     }
     ImGui::End();
 }
 
 
-EditorObject::EditorObject(const std::string& n) : name(n) {
+EditorObject::EditorObject(const std::string& n)
+    : name(n) {
     // window = new ImGuiInfoWindow(n, to_string());
     // window = new ImGuiEditorObjectWindow(this);
 }
@@ -157,7 +152,8 @@ PointsProperty* EditorObject::get_points() {
 //         points->draw();
 //     }
 // }
-
+ObjectStorage::ObjectStorage(ImGuiMenu* p)
+    : parent_menu(p) {}
 
 bool ObjectStorage::from_json(nlohmann::json& data) {
     try {
@@ -242,7 +238,7 @@ bool ObjectStorage::from_json(nlohmann::json& data) {
                 }
             }
             spdlog::info("Parsed object: {}", obj.to_string());
-            objects.insert(std::make_pair(obj_name, obj));
+            add_object(obj_name, obj);
         }
     }
     catch (const nlohmann::detail::type_error& err) {
@@ -274,6 +270,10 @@ bool ObjectStorage::from_json_file(const std::string &path) {
     }
 
     return from_json(data);
+}
+
+ImGuiMenu* ObjectStorage::get_parent() {
+    return parent_menu;
 }
 
 int ObjectStorage::size() {
