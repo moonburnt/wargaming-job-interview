@@ -256,7 +256,9 @@ bool ObjectStorage::from_json_file(const std::string &path) {
     file.open(path);
     // TODO: more detailed error handling
     if (!file.good()) {
-        spdlog::error("Unable to open {}", path);
+        ExceptionLogger::get_logger().log_exception(
+            fmt::format("Unable to open {}", path)
+        );
         return false;
     }
 
@@ -264,7 +266,7 @@ bool ObjectStorage::from_json_file(const std::string &path) {
         file >> data;
     }
     catch (const nlohmann::detail::parse_error& err) {
-        spdlog::error(err.what());
+        ExceptionLogger::get_logger().log_exception(err.what());
 
         return false;
     }

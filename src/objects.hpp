@@ -111,6 +111,10 @@ public:
     // Will throw if object does not exist
     const EditorObject& get_object(const std::string& name);
 
+    bool has_item(const std::string& name) {
+        return (objects.find(name) != objects.end());
+    }
+
     std::map<std::string, EditorObject>& get_objects() {
         return objects;
     }

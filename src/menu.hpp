@@ -2,17 +2,15 @@
 
 #include "raylib.h"
 #include "imgui.h"
-#include <string>
-#include <vector>
-
-
-#include "raymath.h"
-#include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include "rlImGui.h"
-#include "rlImGuiColors.h"
-
 #include "view.hpp"
 #include "objects.hpp"
+#include "err_logger.hpp"
+#include <string>
+#include <vector>
+#include <ios>
+
 
 // FD
 class AppWindow;
@@ -36,45 +34,258 @@ public:
 };
 
 
-// WIP
-// class LoadFileWindow: public MenuWindow {
-// private:
-//     const std::string name;
-//     std::string current;
+class CreateObjectWindow: public MenuWindow {
+private:
+    ObjectStorage* storage = nullptr;
 
-// public:
-//     LoadFileWindow(const std::string n): name(n) {}
+    std::string current_name;
 
-//     void update(float) override {
-//         if (!is_open) {
-//             must_die = true;
-//         }
-//     }
+    // This can be organized better
+    bool has_icon = false;
+    std::string icon_path;
 
-//     void draw() override {
-//         if (!is_open) {
-//             return;
-//         }
+    bool has_speed = false;
+    float min_speed = 0.0f;
+    float max_speed = 0.0f;
 
-//         if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
-//             ImGui::InputText(
-//                 "Enter filepath",
-//                 &current
-//             );
+    bool has_material = false;
+    std::vector<std::string> material_choices;
+    std::string choices_string;
+    std::string current_mat;
 
-//             if (ImGui::Button("Load")) {
-//                 parent->set_value(current_txt);
-//                 try {
-//                     parent->validate();
-//                 }
-//                 catch (ValidationError& v_err) {
-//                     ExceptionLogger::get_logger().log_exception(v_err.what());
-//                 }
-//             }
-//         }
-//         ImGui::End();
-//     }
-// }
+    bool has_points = false;
+    int points = 0;
+
+    bool has_errors = false;
+
+public:
+    CreateObjectWindow(ObjectStorage* st): storage(st) {}
+
+    void update(float) override {
+        if (!is_open) {
+            must_die = true;
+        }
+    }
+
+    void draw() override {
+        if (!is_open) {
+            return;
+        }
+
+        if (ImGui::Begin("Add Item", &is_open, ImGuiWindowFlags_None)) {
+            ImGui::InputText(
+                "Enter item's name",
+                &current_name
+            );
+
+            if (ImGui::Checkbox("Has Icon", &has_icon)) {
+                ImGui::InputText(
+                    "Enter item's icon path",
+                    &icon_path
+                );
+            }
+            else {
+                icon_path = "";
+            }
+
+            if (ImGui::Checkbox("Has Speed", &has_speed)) {
+                ImGui::InputFloat("Enter min speed value", &min_speed);
+                ImGui::InputFloat("Enter max speed value", &max_speed);
+            }
+            else {
+                min_speed = 0.0f;
+                max_speed = 0.0f;
+            }
+
+            if (ImGui::Checkbox("Has Material", &has_material)) {
+                ImGui::Text("%s", choices_string.c_str());
+
+                ImGui::InputText(
+                    "Enter item's new material",
+                    &current_mat
+                );
+                if (ImGui::Button("Add material")) {
+                    if (
+                        std::find(
+                            material_choices.begin(),
+                            material_choices.end(),
+                            current_mat
+                        ) != material_choices.end()
+                    ) {
+                        material_choices.push_back(current_mat);
+                        current_mat = "";
+                        choices_string += (current_mat + ", ");
+                    }
+                    else {
+                        ExceptionLogger::get_logger().log_exception(
+                            fmt::format(
+                                "Material {} already exists in storage",
+                                current_mat
+                            )
+                        );
+                    }
+                }
+            }
+            else {
+                current_mat = "";
+                choices_string = "";
+                material_choices.clear();
+            }
+
+            if (ImGui::Checkbox("Has Points", &has_points)) {
+                ImGui::InputInt("Enter item's points", &points);
+            }
+            else {
+                points = 0;
+            }
+
+            if (ImGui::Button("Save")) {
+                has_errors = false;
+
+                if (storage->has_item(current_name)) {
+                    ExceptionLogger::get_logger().log_exception(
+                        fmt::format(
+                            "Item with name {} already exists in storage",
+                            current_name
+                        )
+                    );
+                    has_errors = true;
+                }
+
+                if (has_points && points < 0) {
+                    ExceptionLogger::get_logger().log_exception(
+                        "Points must be a positive integer"
+                    );
+                    has_errors = true;
+                }
+
+                if (has_material && material_choices.empty()) {
+                    ExceptionLogger::get_logger().log_exception(
+                        "Materials list must have at least one item"
+                    );
+                    has_errors = true;
+                }
+
+                if (has_speed && (min_speed >= max_speed)) {
+                    ExceptionLogger::get_logger().log_exception(
+                        "Min speed can't be less or equal to max speed"
+                    );
+                    has_errors = true;
+                }
+
+                if (!has_errors) {
+                    EditorObject obj = EditorObject(current_name);
+                    if (has_icon) {
+                        obj.add_icon(new IconProperty(icon_path));
+                    }
+                    if (has_speed) {
+                        obj.add_speed(
+                            new SpeedProperty(
+                                min_speed,
+                                min_speed,
+                                max_speed
+                            )
+                        );
+                    }
+                    if (has_material) {
+                        obj.add_material(
+                            new MaterialProperty(
+                                material_choices[0],
+                                material_choices
+                            )
+                        );
+                    }
+                    if (has_points) {
+                        obj.add_points(
+                            new PointsProperty(1)
+                        );
+                    }
+
+                    storage->add_object(current_name, obj);
+                    is_open = false;
+                }
+            }
+
+        }
+        ImGui::End();
+    }
+
+};
+
+
+class FileActionWindow: public MenuWindow {
+private:
+    const std::string name;
+    std::string current;
+
+protected:
+    const std::string action_name;
+    ObjectStorage* storage = nullptr;
+
+public:
+    FileActionWindow(const std::string n, const std::string an, ObjectStorage* s)
+        : name(n)
+        , action_name(an)
+        , storage(s) {}
+
+    void update(float) override {
+        if (!is_open) {
+            must_die = true;
+        }
+    }
+
+    virtual bool perform_action(const std::string &) = 0;
+
+    void draw() override {
+        if (!is_open) {
+            return;
+        }
+
+        if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
+            ImGui::InputText(
+                "Enter filepath",
+                &current
+            );
+
+            if (ImGui::Button(action_name.c_str())) {
+                bool is_good = true;
+                try {
+                    is_good = perform_action(current);
+                }
+                catch (std::ios_base::failure& exc) {
+                    ExceptionLogger::get_logger().log_exception(&exc);
+                    is_good = false;
+                }
+
+                if (is_good) {
+                    is_open = false;
+                }
+            }
+        }
+        ImGui::End();
+    }
+};
+
+
+class LoadFileWindow: public FileActionWindow {
+public:
+    LoadFileWindow(ObjectStorage* s)
+        : FileActionWindow("Load File", "Load", s) {}
+
+    bool perform_action(const std::string& fp) override {
+        return storage->from_json_file(fp);
+    }
+};
+
+class SaveFileWindow: public FileActionWindow {
+public:
+    SaveFileWindow(ObjectStorage* s)
+        : FileActionWindow("Save File", "Save", s) {}
+
+    bool perform_action(const std::string& fp) override {
+        return storage->to_json_file(fp);
+    }
+};
 
 
 class MenuStorage {

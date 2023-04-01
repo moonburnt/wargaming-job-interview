@@ -2,8 +2,6 @@
 #include "window.hpp"
 #include "spdlog/spdlog.h"
 #include "imgui.h"
-#include "misc/cpp/imgui_stdlib.h"
-#include "err_logger.hpp"
 
 
 ImGuiInfoWindow::ImGuiInfoWindow(const std::string& n, const std::string& txt)
@@ -43,14 +41,16 @@ void ImGuiMenu::draw() {
                 // TODO: unhardcode the path
                 // Either show native system file selection dialog,
                 // or pick one of imgui-powered solutions from github
-                storage.from_json_file("./components.json");
+                // storage.from_json_file("./components.json");
+                add_submenu(new LoadFileWindow(&storage));
             }
 
             if (ImGui::MenuItem("Save")) {
                 // TODO: unhardcode the path
                 // Either show native system file selection dialog,
                 // or pick one of imgui-powered solutions from github
-                storage.to_json_file("./components.json");
+                // storage.to_json_file("./components.json");
+                add_submenu(new SaveFileWindow(&storage));
             }
 
             if (ImGui::MenuItem("Exit"))
