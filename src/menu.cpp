@@ -61,7 +61,7 @@ void CreateObjectWindow::draw() {
 
         ImGui::Checkbox("Has Speed", &has_speed);
         if (has_speed) {
-            ImGui::InputFloat("Enter current speed value", &min_speed);
+            ImGui::InputFloat("Enter current speed value", &current_speed);
             ImGui::InputFloat("Enter min speed value", &min_speed);
             ImGui::InputFloat("Enter max speed value", &max_speed);
         }

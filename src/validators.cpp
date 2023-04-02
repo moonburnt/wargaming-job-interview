@@ -34,7 +34,7 @@ void FloatInRangeValidator::set_max(float m) {
 
 void FloatInRangeValidator::validate(float val) {
     spdlog::debug("Performing validation of {}", val);
-    if (min < val < max) {
+    if (min <= val <= max) {
         spdlog::debug("Success");
         return;
     }
