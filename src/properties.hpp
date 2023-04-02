@@ -201,6 +201,15 @@ public:
     void draw() override {
         view.draw();
     }
+
+    nlohmann::json to_json() override {
+        nlohmann::json ret = {};
+        ret["min"] = min;
+        ret["max"] = max;
+        ret["value"] = get_validated_data();
+
+        return ret;
+    }
 };
 
 
@@ -224,6 +233,14 @@ public:
 
     void draw() override {
         view.draw();
+    }
+
+    nlohmann::json to_json() override {
+        nlohmann::json ret = {};
+        ret["choices"] = choices;
+        ret["value"] = get_validated_data();
+
+        return ret;
     }
 };
 
