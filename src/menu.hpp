@@ -45,11 +45,13 @@ private:
     std::string icon_path;
 
     bool has_speed = false;
+    float current_speed;
     float min_speed = 0.0f;
     float max_speed = 0.0f;
 
     bool has_material = false;
     std::vector<std::string> material_choices;
+    int current_choice;
     std::string choices_string;
     std::string current_mat;
 
@@ -92,17 +94,19 @@ public:
 
             ImGui::Checkbox("Has Speed", &has_speed);
             if (has_speed) {
+                ImGui::InputFloat("Enter current speed value", &min_speed);
                 ImGui::InputFloat("Enter min speed value", &min_speed);
                 ImGui::InputFloat("Enter max speed value", &max_speed);
             }
             else {
+                current_speed = 0.0f;
                 min_speed = 0.0f;
                 max_speed = 0.0f;
             }
 
             ImGui::Checkbox("Has Material", &has_material);
             if (has_material) {
-                ImGui::Text("%s", choices_string.c_str());
+                ImGui::Text("Choices: %s", choices_string.c_str());
 
                 ImGui::InputText(
                     "Enter item's new material",
@@ -127,6 +131,36 @@ public:
                                 current_mat
                             )
                         );
+                    }
+                }
+
+                if (!material_choices.empty()) {
+                    if (
+                        ImGui::BeginCombo(
+                            "Current mat choice",
+                            material_choices[current_choice].c_str()
+                        )
+                    ) {
+                        for (
+                            int i = 0;
+                            i < static_cast<int>(material_choices.size());
+                            i++
+                        ) {
+                            const bool is_selected = (current_choice == i);
+                            if (
+                                ImGui::Selectable(
+                                    material_choices[i].c_str(),
+                                    is_selected
+                                )
+                            ) {
+                                current_choice = i;
+                            }
+
+                            if (is_selected) {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
                     }
                 }
             }
@@ -171,9 +205,9 @@ public:
                     has_errors = true;
                 }
 
-                if (has_speed && (min_speed >= max_speed)) {
+                if (has_speed && !(min_speed <= current_speed <= max_speed)) {
                     ExceptionLogger::get_logger().log_exception(
-                        "Min speed can't be less or equal to max speed"
+                        "Current speed must be higher or eq to min, lower or eq to max"
                     );
                     has_errors = true;
                 }
@@ -193,7 +227,7 @@ public:
                     if (has_speed) {
                         obj.add_speed(
                             new SpeedProperty(
-                                min_speed,
+                                current_speed,
                                 min_speed,
                                 max_speed
                             )
@@ -202,14 +236,14 @@ public:
                     if (has_material) {
                         obj.add_material(
                             new MaterialProperty(
-                                material_choices[0],
+                                material_choices[current_choice],
                                 material_choices
                             )
                         );
                     }
                     if (has_points) {
                         obj.add_points(
-                            new PointsProperty(1)
+                            new PointsProperty(points)
                         );
                     }
 
