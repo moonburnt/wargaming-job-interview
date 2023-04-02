@@ -51,13 +51,15 @@ public:
 
     ~EditorObject();
 
-    void add_icon(IconProperty* i);
+    bool add_icon(IconProperty* i);
 
-    void add_speed(SpeedProperty* sp);
+    bool add_speed(SpeedProperty* sp);
 
-    void add_material(MaterialProperty* mat);
+    bool add_material(MaterialProperty* mat);
 
-    void add_points(PointsProperty* pts);
+    bool add_points(PointsProperty* pts);
+
+    bool is_valid();
 
     std::string get_name();
 

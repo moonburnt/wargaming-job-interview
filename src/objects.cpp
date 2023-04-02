@@ -63,20 +63,79 @@ EditorObject::~EditorObject() {
     }
 }
 
-void EditorObject::add_icon(IconProperty* i) {
+bool EditorObject::is_valid() {
+    return !(
+        (icon == nullptr) &&
+        (points == nullptr) &&
+        (speed == nullptr) &&
+        (material == nullptr)
+    );
+}
+
+bool EditorObject::add_icon(IconProperty* i) {
+    bool got_err = false;
+
+    try {
+        i->validate();
+    }
+    catch (ValidationError& v_err) {
+        ExceptionLogger::get_logger().log_exception(v_err.what());
+        got_err = true;
+    }
+
+
     icon = i;
+
+    return got_err;
 }
 
-void EditorObject::add_speed(SpeedProperty* sp) {
+bool EditorObject::add_speed(SpeedProperty* sp) {
+    bool got_err = false;
+
+    try {
+        sp->validate();
+    }
+    catch (ValidationError& v_err) {
+        ExceptionLogger::get_logger().log_exception(v_err.what());
+        got_err = true;
+    }
+
+
     speed = sp;
+
+    return got_err;
 }
 
-void EditorObject::add_material(MaterialProperty* mat) {
+bool EditorObject::add_material(MaterialProperty* mat) {
+    bool got_err = false;
+
+    try {
+        mat->validate();
+    }
+    catch (ValidationError& v_err) {
+        ExceptionLogger::get_logger().log_exception(v_err.what());
+        got_err = true;
+    }
+
     material = mat;
+
+    return got_err;
 }
 
-void EditorObject::add_points(PointsProperty* pts) {
+bool EditorObject::add_points(PointsProperty* pts) {
+    bool got_err = false;
+
+    try {
+        pts->validate();
+    }
+    catch (ValidationError& v_err) {
+        ExceptionLogger::get_logger().log_exception(v_err.what());
+        got_err = true;
+    }
+
     points = pts;
+
+    return got_err;
 }
 
 std::string EditorObject::get_name() {
@@ -136,22 +195,7 @@ PointsProperty* EditorObject::get_points() {
     return points;
 }
 
-// void EditorObject::draw() {
-//     spdlog::info("drawing object {}", get_name());
 
-//     if (icon != nullptr) {
-//         icon->draw();
-//     }
-//     if (speed != nullptr) {
-//         speed->draw();
-//     }
-//     if (material != nullptr) {
-//         material->draw();
-//     }
-//     if (points != nullptr) {
-//         points->draw();
-//     }
-// }
 ObjectStorage::ObjectStorage(ImGuiMenu* p)
     : parent_menu(p) {}
 
@@ -175,61 +219,32 @@ bool ObjectStorage::from_json(nlohmann::json& data) {
             for (nlohmann::json::iterator pit = props.begin(); pit != props.end(); pit++) {
                 std::string key = pit.key();
 
-                // New traversal method may cause issues on incorrectly formatted json
+                // New traversal method may cause issues on incorrectly formatted
+                // json. Also pointers will flood the memory if not deleted in
+                // obj's destructor
 
                 if (!key.compare("icon")) {
-                    IconProperty* i = new IconProperty(pit.value());
-
-                    try {
-                        i->validate();
-                    }
-                    catch (ValidationError& v_err) {
-                        ExceptionLogger::get_logger().log_exception(v_err.what());
-                    }
-                    obj.add_icon(i);
+                    obj.add_icon(new IconProperty(pit.value()));
                 }
                 else if (!key.compare("speed")) {
-                    SpeedProperty* sp =
+                    obj.add_speed(
                         new SpeedProperty(
                             pit.value()["value"],
                             pit.value()["min"],
                             pit.value()["max"]
-                        );
-
-                    try {
-                        sp->validate();
-                    }
-                    catch (ValidationError& v_err) {
-                        ExceptionLogger::get_logger().log_exception(v_err.what());
-                    }
-                    obj.add_speed(sp);
+                        )
+                    );
                 }
                 else if (!key.compare("material")) {
-                    MaterialProperty* mat = new MaterialProperty(
-                        pit.value()["value"],
-                        pit.value()["choices"]
+                    obj.add_material(
+                        new MaterialProperty(
+                            pit.value()["value"],
+                            pit.value()["choices"]
+                        )
                     );
-
-                    try {
-                        mat->validate();
-                    }
-                    catch (ValidationError& v_err) {
-                        ExceptionLogger::get_logger().log_exception(v_err.what());
-                    }
-                    obj.add_material(mat);
                 }
                 else if (!key.compare("points")) {
-                    PointsProperty* pts = new PointsProperty(
-                        pit.value()
-                    );
-
-                    try {
-                        pts->validate();
-                    }
-                    catch (ValidationError& v_err) {
-                        ExceptionLogger::get_logger().log_exception(v_err.what());
-                    }
-                    obj.add_points(pts);
+                    obj.add_points(new PointsProperty(pit.value()));
                 }
                 else {
                     ExceptionLogger::get_logger().log_exception(
@@ -237,8 +252,19 @@ bool ObjectStorage::from_json(nlohmann::json& data) {
                     );
                 }
             }
-            spdlog::info("Parsed object: {}", obj.to_string());
-            add_object(obj_name, obj);
+
+            if (!obj.is_valid()) {
+                ExceptionLogger::get_logger().log_exception(
+                    fmt::format(
+                        "Object {} does not have a single prop!",
+                        obj.get_name()
+                    )
+                );
+            }
+            else {
+                spdlog::info("Parsed object: {}", obj.to_string());
+                add_object(obj_name, obj);
+            }
         }
     }
     catch (const nlohmann::detail::type_error& err) {
@@ -254,7 +280,6 @@ bool ObjectStorage::from_json_file(const std::string &path) {
     nlohmann::json data;
 
     file.open(path);
-    // TODO: more detailed error handling
     if (!file.good()) {
         ExceptionLogger::get_logger().log_exception(
             fmt::format("Unable to open {}", path)

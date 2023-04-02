@@ -53,6 +53,14 @@ void TextChoicesValidator::set_choices(std::vector<std::string> c) {
 
 void TextChoicesValidator::validate(std::string str) {
     spdlog::debug("Performing validation of {}", str);
+
+    if (choices.empty()) {
+        spdlog::debug("Fail");
+        throw ValidationError(
+            fmt::format("Choices list must have at least one item")
+        );
+    }
+
     for(std::string& ch: choices) {
         if(!str.compare(ch)) {
             spdlog::debug("Success");

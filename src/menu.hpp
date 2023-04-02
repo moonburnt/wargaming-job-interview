@@ -181,73 +181,49 @@ public:
             if (ImGui::Button("Save")) {
                 has_errors = false;
 
-                if (storage->has_item(current_name)) {
+                EditorObject obj = EditorObject(current_name);
+
+                if (!has_errors && has_icon) {
+                    has_errors = obj.add_icon(new IconProperty(icon_path));
+                }
+                if (!has_errors && has_speed) {
+                    has_errors = obj.add_speed(
+                        new SpeedProperty(
+                            current_speed,
+                            min_speed,
+                            max_speed
+                        )
+                    );
+                }
+                if (!has_errors && has_material) {
+                    has_errors = obj.add_material(
+                        new MaterialProperty(
+                            material_choices[current_choice],
+                            material_choices
+                        )
+                    );
+                }
+                if (!has_errors && has_points) {
+                    has_errors = obj.add_points(
+                        new PointsProperty(points)
+                    );
+                }
+
+                if (!obj.is_valid()) {
                     ExceptionLogger::get_logger().log_exception(
                         fmt::format(
-                            "Item with name {} already exists in storage",
-                            current_name
+                            "Object {} does not have a single prop!",
+                            obj.get_name()
                         )
                     );
                     has_errors = true;
                 }
 
-                if (has_points && points < 0) {
-                    ExceptionLogger::get_logger().log_exception(
-                        "Points must be a positive integer"
-                    );
-                    has_errors = true;
-                }
-
-                if (has_material && material_choices.empty()) {
-                    ExceptionLogger::get_logger().log_exception(
-                        "Materials list must have at least one item"
-                    );
-                    has_errors = true;
-                }
-
-                if (has_speed && !(min_speed <= current_speed <= max_speed)) {
-                    ExceptionLogger::get_logger().log_exception(
-                        "Current speed must be higher or eq to min, lower or eq to max"
-                    );
-                    has_errors = true;
-                }
-
-                if (!has_icon && !has_material && !has_speed && !has_points) {
-                    ExceptionLogger::get_logger().log_exception(
-                        "Must have at least one prop"
-                    );
-                    has_errors = true;
+                if (!has_errors) {
+                    has_errors = (!storage->add_object(current_name, obj));
                 }
 
                 if (!has_errors) {
-                    EditorObject obj = EditorObject(current_name);
-                    if (has_icon) {
-                        obj.add_icon(new IconProperty(icon_path));
-                    }
-                    if (has_speed) {
-                        obj.add_speed(
-                            new SpeedProperty(
-                                current_speed,
-                                min_speed,
-                                max_speed
-                            )
-                        );
-                    }
-                    if (has_material) {
-                        obj.add_material(
-                            new MaterialProperty(
-                                material_choices[current_choice],
-                                material_choices
-                            )
-                        );
-                    }
-                    if (has_points) {
-                        obj.add_points(
-                            new PointsProperty(points)
-                        );
-                    }
-
-                    storage->add_object(current_name, obj);
                     is_open = false;
                 }
             }
