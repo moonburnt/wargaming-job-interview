@@ -18,40 +18,60 @@ public:
 };
 
 
-class ImGuiShowImageWindow: public MenuWindow {
-private:
-    const std::string name;
-    Texture img;
+// FDs for views
+class IconProperty;
+class SpeedProperty;
+class MaterialProperty;
+class PointsProperty;
 
+class IconView {
+private:
+    IconProperty* parent;
+
+    std::string current_txt;
+
+    bool showing_texture = false;
 
 public:
-    ImGuiShowImageWindow(const std::string& n, const std::string& p)
-        : name(n)
-        , img(LoadTexture(p.c_str())) {}
+    IconView(IconProperty* p);
 
-    ~ImGuiShowImageWindow() {
-        UnloadTexture(img);
-    }
+    void draw();
+};
 
-    void update(float) override {
-        if (!is_open) {
-            must_die = true;
-        }
-    }
 
-    void draw() override {
-        if (!is_open) {
-            return;
-        }
+class SpeedView {
+private:
+    SpeedProperty* parent;
 
-        if (ImGui::Begin(name.c_str(), &is_open, ImGuiWindowFlags_None)) {
-            // rlImGuiImageRect(
-            //     &img,
-            //     static_cast<int>(img.width),
-            //     static_cast<int>(img.height),
-            //     { 0 }
-            // );
-        }
-        ImGui::End();
-    }
+    float current;
+public:
+    SpeedView(SpeedProperty* p);
+
+    void draw();
+};
+
+
+class MaterialView {
+private:
+    MaterialProperty* parent;
+
+    int current = 0;
+
+public:
+    MaterialView(MaterialProperty* p);
+
+    void draw();
+};
+
+
+class PointsView {
+private:
+    PointsProperty* parent;
+
+    int current = 0;
+
+public:
+    PointsView(PointsProperty* p);
+
+    void draw();
 };

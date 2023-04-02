@@ -4,145 +4,8 @@
 #include "menu.hpp"
 #include "view.hpp"
 
-void IconView::draw() {
-    ImGui::Text(
-        "%s",
-        fmt::format(
-            "{}: current value: {}, validated value: {}",
-            parent->get_name(),
-            parent->get_data(),
-            parent->get_validated_data()
-        ).c_str()
-    );
 
-    ImGui::InputText(
-        fmt::format("Enter {} value", parent->get_name()).c_str(),
-        &current_txt
-    );
-
-    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
-        showing_texture = false;
-        parent->set_value(current_txt);
-        try {
-            parent->validate();
-        }
-        catch (ValidationError& v_err) {
-            ExceptionLogger::get_logger().log_exception(v_err.what());
-        }
-    }
-
-    if (ImGui::Button(fmt::format("Show {}", parent->get_name()).c_str())) {
-        showing_texture = true;
-    }
-
-    if (showing_texture) {
-        std::optional<Texture> t = parent->get_texture();
-        if (t.has_value()) {
-            DrawTextureV(t.value(), {0.0f, 0.0f}, WHITE);
-        }
-    }
-}
-
-
-void SpeedView::draw() {
-    ImGui::Text(
-        "%s",
-        fmt::format(
-            "{}: current value: {}, validated value: {}",
-            parent->get_name(),
-            parent->get_data(),
-            parent->get_validated_data()
-        ).c_str()
-    );
-
-    ImGui::SliderFloat(
-        fmt::format("Enter {} value", parent->get_name()).c_str(),
-        &current,
-        parent->get_min(),
-        parent->get_max()
-    );
-
-    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
-        parent->set_value(current);
-        try {
-            parent->validate();
-        }
-        catch (ValidationError& v_err) {
-            ExceptionLogger::get_logger().log_exception(v_err.what());
-        }
-    }
-}
-
-void MaterialView::draw() {
-    ImGui::Text(
-        "%s",
-        fmt::format(
-            "{}: current value: {}, validated value: {}",
-            parent->get_name(),
-            parent->get_data(),
-            parent->get_validated_data()
-        ).c_str()
-    );
-
-    // This can be optimized
-    std::vector<std::string> choices = parent->get_choices();
-
-    if (ImGui::BeginCombo(fmt::format("Enter {} value", parent->get_name()).c_str(), choices[current].c_str())) {
-        for (int i = 0; i < static_cast<int>(choices.size()); i++) {
-            const bool is_selected = (current == i);
-            if (ImGui::Selectable(choices[i].c_str(), is_selected)) {
-                current = i;
-            }
-
-            if (is_selected) {
-                ImGui::SetItemDefaultFocus();
-            }
-        }
-        ImGui::EndCombo();
-    }
-
-    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
-        parent->set_value(choices[current]);
-        try {
-            parent->validate();
-        }
-        catch (ValidationError& v_err) {
-            ExceptionLogger::get_logger().log_exception(v_err.what());
-        }
-    }
-}
-
-
-void PointsView::draw() {
-    ImGui::Text(
-        "%s",
-        fmt::format(
-            "{}: current value: {}, validated value: {}",
-            parent->get_name(),
-            parent->get_data(),
-            parent->get_validated_data()
-        ).c_str()
-    );
-
-
-    ImGui::InputInt(
-        fmt::format("Enter {} value", parent->get_name()).c_str(),
-        &current
-    );
-
-    if (ImGui::Button(fmt::format("Validate {}", parent->get_name()).c_str())) {
-        parent->set_value(current);
-        try {
-            parent->validate();
-        }
-        catch (ValidationError& v_err) {
-            ExceptionLogger::get_logger().log_exception(v_err.what());
-        }
-    }
-}
-
-
-
+// IconProperty
 IconProperty::IconProperty(std::string s)
     : ObjectProperty(s)
     , view(IconView(this)) {
@@ -151,6 +14,30 @@ IconProperty::IconProperty(std::string s)
     add_validator(new FilePathValidator());
 }
 
+IconProperty::~IconProperty() {
+    if (texture.has_value()) {
+        UnloadTexture(texture.value());
+    }
+}
+
+void IconProperty::perform_validation() {
+    ObjectProperty<std::string>::perform_validation();
+    if (texture.has_value()) {
+        UnloadTexture(texture.value());
+    }
+    texture = LoadTexture(validated_data.value().c_str());
+}
+
+const std::optional<Texture>& IconProperty::get_texture() {
+    return texture;
+}
+
+void IconProperty::draw() {
+    view.draw();
+}
+
+
+// SpeedProperty
 SpeedProperty::SpeedProperty(float val, float _min, float _max)
     : ObjectProperty(val)
     , view(SpeedView(this))
@@ -164,7 +51,29 @@ SpeedProperty::SpeedProperty(float val, float _min, float _max)
     add_validator(v);
 }
 
+float SpeedProperty::get_min() {
+    return min;
+}
 
+float SpeedProperty::get_max() {
+    return max;
+}
+
+nlohmann::json SpeedProperty::to_json() {
+    nlohmann::json ret = {};
+    ret["min"] = min;
+    ret["max"] = max;
+    ret["value"] = get_validated_data();
+
+    return ret;
+}
+
+void SpeedProperty::draw() {
+    view.draw();
+}
+
+
+// MaterialProperty
 MaterialProperty::MaterialProperty(std::string val, std::vector<std::string> ch)
     : ObjectProperty(val)
     , view(MaterialView(this))
@@ -176,8 +85,28 @@ MaterialProperty::MaterialProperty(std::string val, std::vector<std::string> ch)
     add_validator(v);
 }
 
+const std::vector<std::string>& MaterialProperty::get_choices() {
+    return choices;
+}
+
+int MaterialProperty::get_choices_amount() {
+    return choices.size();
+}
+
+nlohmann::json MaterialProperty::to_json() {
+    nlohmann::json ret = {};
+    ret["choices"] = choices;
+    ret["value"] = get_validated_data();
+
+    return ret;
+}
+
+void MaterialProperty::draw() {
+    view.draw();
+}
 
 
+// PointsProperty
 PointsProperty::PointsProperty(int val)
     : ObjectProperty(val)
     , view(PointsView(this)) {
@@ -186,3 +115,6 @@ PointsProperty::PointsProperty(int val)
     add_validator(new IntegerPositiveValidator());
 }
 
+void PointsProperty::draw() {
+    view.draw();
+}

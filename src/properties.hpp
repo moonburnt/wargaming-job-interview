@@ -7,11 +7,8 @@
 #include <string>
 #include <optional>
 #include "err_logger.hpp"
-
 #include "imgui.h"
 #include "rlImGui.h"
-#include "rlImGuiColors.h"
-
 #include "view.hpp"
 
 template <typename T> class ObjectProperty {
@@ -85,68 +82,9 @@ public:
     }
 };
 
-// FDs for views
-class IconProperty;
-class SpeedProperty;
-class MaterialProperty;
-class PointsProperty;
 
-class IconView {
-private:
-    IconProperty* parent;
-
-    std::string current_txt;
-
-    bool showing_texture = false;
-
-public:
-    IconView(IconProperty* p)
-        : parent(p) {}
-
-    void draw();
-};
-
-
-class SpeedView {
-private:
-    SpeedProperty* parent;
-
-    float current;
-public:
-    SpeedView(SpeedProperty* p): parent(p) {}
-
-    void draw();
-};
-
-
-class MaterialView {
-private:
-    MaterialProperty* parent;
-
-    int current = 0;
-
-public:
-    MaterialView(MaterialProperty* p): parent(p) {}
-
-    void draw();
-};
-
-
-class PointsView {
-private:
-    PointsProperty* parent;
-
-    int current = 0;
-
-public:
-    PointsView(PointsProperty* p): parent(p) {}
-
-    void draw();
-};
-
-
+// FD
 class EditorObject;
-
 
 class IconProperty : public ObjectProperty<std::string> {
 private:
@@ -155,27 +93,12 @@ private:
 
 public:
     IconProperty(std::string str);
-    ~IconProperty() {
-        if (texture.has_value()) {
-            UnloadTexture(texture.value());
-        }
-    }
+    ~IconProperty();
 
-    void perform_validation() override {
-        ObjectProperty<std::string>::perform_validation();
-        if (texture.has_value()) {
-            UnloadTexture(texture.value());
-        }
-        texture = LoadTexture(validated_data.value().c_str());
-    }
+    void perform_validation() override;
+    const std::optional<Texture>& get_texture();
 
-    const std::optional<Texture>& get_texture() {
-        return texture;
-    }
-
-    void draw() override {
-        view.draw();
-    }
+    void draw() override;
 };
 
 
@@ -190,26 +113,12 @@ protected:
 public:
     SpeedProperty(float val, float _min, float _max);
 
-    float get_min() {
-        return min;
-    }
+    float get_min();
+    float get_max();
 
-    float get_max() {
-        return max;
-    }
+    nlohmann::json to_json() override;
 
-    void draw() override {
-        view.draw();
-    }
-
-    nlohmann::json to_json() override {
-        nlohmann::json ret = {};
-        ret["min"] = min;
-        ret["max"] = max;
-        ret["value"] = get_validated_data();
-
-        return ret;
-    }
+    void draw() override;
 };
 
 
@@ -223,25 +132,12 @@ protected:
 public:
     MaterialProperty(std::string val, std::vector<std::string> choices);
 
-    const std::vector<std::string>& get_choices() {
-        return choices;
-    }
+    const std::vector<std::string>& get_choices();
+    int get_choices_amount();
 
-    int get_choices_amount() {
-        return choices.size();
-    }
+    nlohmann::json to_json() override;
 
-    void draw() override {
-        view.draw();
-    }
-
-    nlohmann::json to_json() override {
-        nlohmann::json ret = {};
-        ret["choices"] = choices;
-        ret["value"] = get_validated_data();
-
-        return ret;
-    }
+    void draw() override;
 };
 
 
@@ -252,7 +148,5 @@ private:
 public:
     PointsProperty(int val);
 
-    void draw() override {
-        view.draw();
-    }
+    void draw() override;
 };

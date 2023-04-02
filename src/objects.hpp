@@ -18,12 +18,9 @@ private:
     EditorObject* parent;
 
 public:
-    ImGuiEditorObjectWindow(EditorObject* p): parent(p) {}
+    ImGuiEditorObjectWindow(EditorObject* p);
 
-    EditorObject* get_parent() {
-        return parent;
-    }
-
+    EditorObject* get_parent();
     void draw() override;
 };
 
@@ -39,56 +36,30 @@ protected:
     ImGuiEditorObjectWindow* window = nullptr;
 
 public:
-    ImGuiEditorObjectWindow* get_window() {
-        if (window == nullptr) {
-            window = new ImGuiEditorObjectWindow(this);
-        }
-
-        return window;
-    }
 
     EditorObject(const std::string& n);
 
     ~EditorObject();
 
-    bool add_icon(IconProperty* i);
-
-    bool add_speed(SpeedProperty* sp);
-
-    bool add_material(MaterialProperty* mat);
-
-    bool add_points(PointsProperty* pts);
+    ImGuiEditorObjectWindow* get_window();
 
     bool is_valid();
 
+    bool add_icon(IconProperty* i);
+    bool add_speed(SpeedProperty* sp);
+    bool add_material(MaterialProperty* mat);
+    bool add_points(PointsProperty* pts);
+
     std::string get_name();
-
     std::string to_string();
-
     nlohmann::json to_json();
 
     IconProperty* get_icon();
-
     SpeedProperty* get_speed();
-
     MaterialProperty* get_material();
-
     PointsProperty* get_points();
 
-    void update() {
-        if (icon != nullptr) {
-            icon->draw();
-        }
-        if (speed != nullptr) {
-            speed->draw();
-        }
-        if (material != nullptr) {
-            material->draw();
-        }
-        if (points != nullptr) {
-            points->draw();
-        }
-    }
+    void update();
 };
 
 
@@ -105,7 +76,6 @@ public:
     ImGuiMenu* get_parent();
 
     bool from_json(nlohmann::json& data);
-
     bool from_json_file(const std::string &path);
 
     int size();
@@ -113,20 +83,14 @@ public:
     // Will throw if object does not exist
     const EditorObject& get_object(const std::string& name);
 
-    bool has_item(const std::string& name) {
-        return (objects.find(name) != objects.end());
-    }
+    bool has_item(const std::string& name);
 
-    std::map<std::string, EditorObject>& get_objects() {
-        return objects;
-    }
+    std::map<std::string, EditorObject>& get_objects();
 
     bool add_object(const std::string& name, EditorObject obj);
-
     bool add_object(const std::string& name);
 
     nlohmann::json to_json();
-
     bool to_json_file(const std::string& path);
 
     virtual void draw();

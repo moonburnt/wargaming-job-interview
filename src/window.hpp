@@ -20,14 +20,10 @@ protected:
 
 public:
     AppWindow();
-
     ~AppWindow();
 
     void init();
-
     bool is_active();
-
     void run();
-
     void quit();
 };

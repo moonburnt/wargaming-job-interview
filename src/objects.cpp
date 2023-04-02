@@ -5,6 +5,13 @@
 #include "menu.hpp"
 
 
+// ImGuiEditorObjectWindow
+ImGuiEditorObjectWindow::ImGuiEditorObjectWindow(EditorObject* p): parent(p) {}
+
+EditorObject* ImGuiEditorObjectWindow::get_parent() {
+    return parent;
+}
+
 void ImGuiEditorObjectWindow::draw() {
     if (!is_open) {
         return;
@@ -35,6 +42,7 @@ void ImGuiEditorObjectWindow::draw() {
 }
 
 
+// EditorObject
 EditorObject::EditorObject(const std::string& n)
     : name(n) {
     // window = new ImGuiInfoWindow(n, to_string());
@@ -61,6 +69,14 @@ EditorObject::~EditorObject() {
     if (window != nullptr) {
         window->must_die = true;
     }
+}
+
+ImGuiEditorObjectWindow* EditorObject::get_window() {
+    if (window == nullptr) {
+        window = new ImGuiEditorObjectWindow(this);
+    }
+
+    return window;
 }
 
 bool EditorObject::is_valid() {
@@ -195,7 +211,23 @@ PointsProperty* EditorObject::get_points() {
     return points;
 }
 
+void EditorObject::update() {
+    if (icon != nullptr) {
+        icon->draw();
+    }
+    if (speed != nullptr) {
+        speed->draw();
+    }
+    if (material != nullptr) {
+        material->draw();
+    }
+    if (points != nullptr) {
+        points->draw();
+    }
+}
 
+
+// ObjectStorage
 ObjectStorage::ObjectStorage(ImGuiMenu* p)
     : parent_menu(p) {}
 
@@ -307,9 +339,16 @@ int ObjectStorage::size() {
     return objects.size();
 }
 
-// Will throw if object does not exist
 const EditorObject& ObjectStorage::get_object(const std::string& name) {
     return objects.at(name);
+}
+
+bool ObjectStorage::has_item(const std::string& name) {
+    return (objects.find(name) != objects.end());
+}
+
+std::map<std::string, EditorObject>& ObjectStorage::get_objects() {
+    return objects;
 }
 
 bool ObjectStorage::add_object(const std::string& name, EditorObject obj) {
