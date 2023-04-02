@@ -33,22 +33,22 @@ class CreateObjectWindow: public MenuWindow {
 private:
     ObjectStorage* storage = nullptr;
 
-    std::string current_name;
+    std::string current_name = "";
 
     // This can be organized better
     bool has_icon = false;
-    std::string icon_path;
+    std::string icon_path = "";
 
     bool has_speed = false;
-    float current_speed;
+    float current_speed = 0.0f;
     float min_speed = 0.0f;
     float max_speed = 0.0f;
 
     bool has_material = false;
-    std::vector<std::string> material_choices;
-    int current_choice;
-    std::string choices_string;
-    std::string current_mat;
+    std::vector<std::string> material_choices = {};
+    int current_choice = 0;
+    std::string choices_string = "";
+    std::string current_mat = "";
 
     bool has_points = false;
     int points = 0;
