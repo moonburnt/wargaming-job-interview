@@ -12,6 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Prefer new GLVND over OLD
 set(OpenGL_GL_PREFERENCE GLVND)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/editor")
+
 add_executable(editor)
 
 target_sources(editor PRIVATE

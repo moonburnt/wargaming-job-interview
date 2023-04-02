@@ -1,0 +1,29 @@
+name: build_windows
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  windows:
+    name: ${{ matrix.config }} Windows ${{ matrix.arch }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build
+      shell: bash
+      run: |
+        mkdir ./build
+        cmake . -B ./build
+        cmake --build ./build --config Release
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows-${{ matrix.arch }}
+        path: build/editor/
+        if-no-files-found: error
